@@ -1,69 +1,113 @@
-# Miamala
+# Miamala 💳
 
-**Open-source payment transaction management for businesses and developers.**
+### Open-source payment transaction management for businesses and developers
 
-Miamala is a payment transaction management platform designed to help businesses and organizations record, organize, track, and reconcile transactions from mobile money and other digital payment channels.
+Miamala is an open-source payment transaction management platform designed to help businesses and organizations **record, organize, track, search, and reconcile payment transactions** from multiple payment channels.
 
-The project is being developed with a focus on practical payment workflows, particularly for businesses operating in Tanzania and across Africa.
+The project is being developed with a particular focus on the realities of digital payments in **Tanzania and across Africa**.
 
-## Why Miamala?
+> 🚧 **Status: Active Development**
 
-Managing payments across multiple channels can become difficult when transaction records are scattered across different platforms, spreadsheets, messages, and systems.
+---
 
-Miamala aims to provide a centralized platform for managing payment transactions and making reconciliation simpler, more reliable, and easier to understand.
+## 🎯 The Problem
 
-## Key Features
+Businesses increasingly receive payments through multiple channels:
 
-Miamala is being developed to support:
+* Mobile money
+* Bank transfers
+* Online payments
+* Different payment providers
 
-* Payment transaction recording
-* Transaction categorization
-* Transaction search
-* Transaction status tracking
-* Payment reconciliation
+When transaction information is scattered across different systems, spreadsheets, messages, and payment platforms, reconciliation becomes difficult.
+
+Miamala aims to provide a **centralized transaction management layer** that makes payment records easier to understand and reconcile.
+
+---
+
+## 💡 What Miamala Does
+
+Miamala is being designed around the complete payment transaction lifecycle:
+
+```text
+Payment
+   │
+   ▼
+Transaction Record
+   │
+   ├── Categorize
+   │
+   ├── Search
+   │
+   ├── Track Status
+   │
+   └── Reconcile
+          │
+          ▼
+       Business
+       Records
+```
+
+The goal is to turn payment records into **structured, searchable, and actionable business data**.
+
+---
+
+## ✨ Core Features
+
+### Transaction Management
+
+* Record payment transactions
+* Categorize transactions
+* Search by transaction information
+* Track transaction status
+* View transaction history
+* Calculate transaction summaries
+
+### Payment Reconciliation
+
+* Match payments with business records
+* Identify pending transactions
+* Track completed and failed payments
+* Support order/payment reconciliation
+
+### Reporting
+
 * Daily transaction summaries
+* Transaction statistics
+* Search and filtering
 * CSV export
-* Order and payment reconciliation
-* Support for multiple payment channels
-* Business-focused transaction management
 
-> **Note:** Miamala is actively under development. Features and functionality may change as the project evolves.
+### Multi-channel Payments
 
-## Supported Payment Channels
+Miamala is designed to support multiple payment channels, including:
 
-The project is designed with Tanzania's digital payment ecosystem in mind, including:
+* **M-Pesa**
+* **Airtel Money**
+* **Mixx by Yas**
+* **Bank payments**
 
-* M-Pesa
-* Airtel Money
-* Mixx by Yas
-* Bank payments
+Additional payment providers can be integrated as the platform evolves.
 
-Additional payment providers and integrations may be added as development progresses.
+---
 
-## Technology
+## 🏗️ Technology
 
-Miamala is being developed using modern web technologies, with the current development direction centered around:
+The current development direction is centered around:
 
-* **Laravel**
-* **PHP**
-* **PostgreSQL**
-* **GitHub**
-* **Render**
-* **Neon PostgreSQL**
+| Technology          | Purpose                           |
+| ------------------- | --------------------------------- |
+| **Laravel**         | Application backend               |
+| **PHP**             | Backend development               |
+| **PostgreSQL**      | Database                          |
+| **GitHub**          | Source control & collaboration    |
+| **Render**          | Application hosting               |
+| **Neon PostgreSQL** | Managed PostgreSQL infrastructure |
 
-The architecture is designed to provide a foundation that can scale as Miamala grows.
+The architecture is being designed with future scalability and additional payment integrations in mind.
 
-## Project Status
+---
 
-🚧 **Active Development**
-
-Miamala is currently under active development. The project began as a lightweight PHP payment transaction manager and is evolving toward a more robust Laravel-based platform.
-
-The repository will continue to evolve as new functionality is implemented.
-
-## Roadmap
-
-Our roadmap includes:
+## 🗺️ Roadmap
 
 ### Core Platform
 
@@ -72,66 +116,90 @@ Our roadmap includes:
 * [ ] Advanced transaction search
 * [ ] Transaction status management
 * [ ] Dashboard and reporting
-* [ ] CSV import and export
+* [ ] CSV import/export
 * [ ] Payment reconciliation
 
 ### Payment Integrations
 
-* [ ] M-Pesa integration
-* [ ] Airtel Money integration
-* [ ] Mixx by Yas integration
+* [ ] M-Pesa
+* [ ] Airtel Money
+* [ ] Mixx by Yas
 * [ ] Bank payment workflows
 * [ ] Additional payment providers
 
-### Platform Improvements
+### Business Platform
 
-* [ ] Authentication and user management
+* [ ] Authentication
 * [ ] Business accounts
+* [ ] User management
 * [ ] Role-based access control
 * [ ] API
 * [ ] Notifications
 * [ ] Automated reconciliation
-* [ ] Improved reporting and analytics
+* [ ] Advanced analytics
 
 ### Future
 
 * [ ] Mobile-friendly experience
 * [ ] Developer integrations
 * [ ] Additional African payment providers
-* [ ] Advanced financial analytics
+* [ ] Advanced financial reporting
+* [ ] Payment-provider webhooks
 
-The roadmap is subject to change as the project develops and community feedback is received.
+---
 
-## Getting Started
+## 🧑🏾‍💻 Development
 
-Miamala is currently under active development, so installation instructions will be expanded as the Laravel version reaches a stable development release.
+Miamala is currently under active development.
 
-### Prerequisites
+The project originally started as a lightweight PHP payment transaction manager and is evolving toward a more structured Laravel-based platform.
 
-The planned development environment includes:
+### Planned development environment
 
 * PHP
 * Composer
 * Laravel
 * PostgreSQL
-* Node.js and npm
+* Node.js
+* npm
 
-### Installation
-
-Clone the repository:
+### Clone the repository
 
 ```bash
 git clone https://github.com/aziziyusuph/miamala.git
+
 cd miamala
 ```
 
-Installation and configuration instructions will be updated as the Laravel application becomes the primary implementation.
+> Installation and deployment instructions will be expanded as the Laravel implementation reaches a stable development release.
 
-## Contributing
+---
+
+## 🔐 Security
+
+Payment-related software requires careful attention to security.
+
+Miamala's development priorities include:
+
+* Secure authentication
+* Authorization
+* Input validation
+* Protection of sensitive transaction information
+* Secure API integrations
+* Safe handling of payment-provider credentials
+* Auditability of transaction changes
+
+If you discover a security vulnerability, please avoid publicly posting sensitive details in a GitHub issue.
+
+A dedicated security reporting process will be introduced as the project matures.
+
+---
+
+## 🤝 Contributing
 
 Contributions are welcome.
 
-If you would like to contribute to Miamala:
+To contribute:
 
 1. Fork the repository.
 2. Create a feature branch.
@@ -141,23 +209,27 @@ If you would like to contribute to Miamala:
 6. Push your branch.
 7. Open a pull request.
 
-For significant changes, please open an issue first so the proposed change can be discussed.
+For major changes, please open an issue first so the proposed change can be discussed.
 
-## Security
+---
 
-Security is an important part of Miamala because the project deals with payment transaction data.
+## 🌍 Vision
 
-If you discover a security vulnerability, please do not disclose it publicly through a GitHub issue.
+Miamala is being built around a simple idea:
 
-A dedicated security reporting process will be provided as the project progresses.
+> **Payment data should be easier for businesses to manage, understand, and reconcile.**
 
-## Support Miamala
+The longer-term vision is to create an open-source transaction management platform that can work with the diverse payment ecosystems found across **Tanzania and other African markets**.
 
-Miamala is an open-source project, and continued development takes time and resources.
+---
 
-If you find Miamala useful or believe in its vision, you can support the project through GitHub Sponsors.
+## ❤️ Support Miamala
 
-Your sponsorship helps support:
+Miamala is an open-source project.
+
+If you believe in the project's vision and want to support its continued development, you can become a sponsor.
+
+**Your support can help fund:**
 
 * New features
 * Payment integrations
@@ -168,21 +240,26 @@ Your sponsorship helps support:
 * Bug fixes
 * Long-term maintenance
 
-[❤️ Sponsor Miamala](https://github.com/sponsors/aziziyusuph)
+👉 [❤️ Sponsor Miamala](https://github.com/sponsors/aziziyusuph)
 
-Every contribution helps move the project forward.
+---
 
-## Community
+## 👨🏾‍💻 Author
 
-We welcome developers, businesses, organizations, and other contributors who are interested in improving payment transaction management through open-source technology.
+**Azizi Yusuph**
 
-If you have ideas, feature requests, questions, or suggestions, please open an issue or start a discussion.
+Software Developer · Technical Writer · Open Source Builder
 
-## License
+* GitHub: https://github.com/aziziyusuph
+* LinkedIn: https://www.linkedin.com/in/azizi-yusuph/
 
-Miamala is open-source software.
+---
 
-The project's license will be documented here as the licensing decision is finalized.
+## 📄 License
+
+Miamala is an open-source project.
+
+The project's license will be documented here once the licensing decision is finalized.
 
 ---
 
