@@ -1,58 +1,263 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Miamala
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Miamala** is a transaction management application for recording, organizing, searching, and reconciling payments from multiple payment channels.
 
-## About Laravel
+This branch contains the **Laravel rebuild** of the original Miamala application. The rebuild is being developed as a clean, maintainable Laravel application while preserving the core transaction-management purpose of the original project.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> **Development status:** Active rebuild. The transaction-management foundation and CRUD workflow are currently implemented; additional features are being developed incrementally.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## What Miamala Does
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Miamala is designed for businesses, schools, landlords, NGOs, online sellers, and other organizations that need a simple way to manage incoming payments.
 
-## Learning Laravel
+### Current capabilities
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+* Record payment transactions
+* Edit and delete transactions
+* Track customer name and phone number
+* Record payment provider/channel
+* Store transaction IDs and order references
+* Categorize transactions
+* Track transaction status
+* Record payment dates
+* Store expected amounts for reconciliation
+* Mark transactions as reconciled or unreconciled
+* Search by customer name, phone number, transaction ID, or order reference
+* Filter by provider, status, category, and date range
+* Paginate transaction records
+* Soft-delete transactions
+* Seed the application with realistic sample transaction data
+* Validate transaction business rules and prevent duplicate transaction IDs
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Supported payment channels
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+* M-Pesa
+* Airtel Money
+* Mixx by Yas
+* Bank
+* Cash
+* Other
 
-## Agentic Development
+### Transaction statuses
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+* Pending
+* Completed
+* Failed
+* Refunded
 
-```bash
-composer require laravel/boost --dev
+## Technology Stack
 
-php artisan boost:install
+* **PHP 8.3+**
+* **Laravel 13**
+* **Blade** for server-rendered views
+* **Vite** for frontend asset development
+* **SQLite** for the default Laravel development setup
+* **MySQL / PostgreSQL** can be configured through Laravel's database configuration
+* **PHPUnit** for automated testing
+
+The Laravel rebuild follows Laravel's conventional MVC structure with controllers, form requests, Eloquent models, migrations, factories, seeders, Blade views, and feature tests.
+
+## Project Structure
+
+```text
+app/
+├── Http/
+│   ├── Controllers/
+│   │   └── TransactionController.php
+│   └── Requests/
+│       ├── StoreTransactionRequest.php
+│       └── UpdateTransactionRequest.php
+├── Models/
+│   └── Transaction.php
+
+database/
+├── factories/
+│   └── TransactionFactory.php
+├── migrations/
+│   └── *_create_transactions_table.php
+└── seeders/
+    └── TransactionSeeder.php
+
+resources/
+├── css/
+├── js/
+└── views/
+    └── transactions/
+        ├── _form.blade.php
+        ├── create.blade.php
+        ├── edit.blade.php
+        └── index.blade.php
+
+routes/
+└── web.php
+
+tests/
+└── Feature/
+    ├── TransactionCrudTest.php
+    └── TransactionFoundationTest.php
+
+legacy/
+└── index.php
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+The `legacy/` directory preserves the original PHP implementation while the main application is rebuilt in Laravel.
+
+## Getting Started
+
+### Requirements
+
+* PHP 8.3 or later
+* Composer
+* Node.js and npm
+* A supported database
+
+### Installation
+
+Clone the repository and switch to the Laravel rebuild branch:
+
+```bash
+git clone https://github.com/aziziyusuph/miamala.git
+cd miamala
+git checkout laravel-rebuild
+```
+
+Install PHP dependencies:
+
+```bash
+composer install
+```
+
+Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+Generate the application key:
+
+```bash
+php artisan key:generate
+```
+
+Configure the database in `.env`, then run migrations:
+
+```bash
+php artisan migrate
+```
+
+Install frontend dependencies and build the assets:
+
+```bash
+npm install
+npm run build
+```
+
+### Seed sample data
+
+To populate the application with sample transactions:
+
+```bash
+php artisan db:seed --class=TransactionSeeder
+```
+
+Or, on a fresh development database:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+### Run the application
+
+```bash
+php artisan serve
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8000
+```
+
+The transaction management interface is available at:
+
+```text
+http://127.0.0.1:8000/transactions
+```
+
+## Development Commands
+
+Run the test suite:
+
+```bash
+php artisan test
+```
+
+Run Laravel Pint:
+
+```bash
+vendor/bin/pint
+```
+
+Build frontend assets:
+
+```bash
+npm run build
+```
+
+## Transaction Data Model
+
+| Field             | Purpose                                     |
+| ----------------- | ------------------------------------------- |
+| `customer_name`   | Name of the customer or payer               |
+| `phone`           | Customer phone number                       |
+| `provider`        | Payment channel/provider                    |
+| `transaction_id`  | Unique payment transaction identifier       |
+| `category`        | Business category of the payment            |
+| `amount`          | Amount received                             |
+| `status`          | Pending, completed, failed, or refunded     |
+| `payment_date`    | Date and time of payment                    |
+| `order_reference` | Related order, invoice, or reference number |
+| `expected_amount` | Amount expected for reconciliation          |
+| `reconciled`      | Whether the payment has been reconciled     |
+| `notes`           | Additional transaction information          |
+
+Transaction records use soft deletes, and commonly queried fields such as phone number, provider, status, category, payment date, order reference, and reconciliation status are indexed.
+
+## Roadmap
+
+The Laravel rebuild will continue in incremental milestones.
+
+Planned areas include:
+
+* Dashboard and payment summaries
+* Improved reconciliation workflows
+* CSV export
+* Authentication and user management
+* Reporting and analytics
+* Payment-provider integrations
+* Production deployment configuration
+* Additional automated tests
+* Documentation for administrators and users
+
+Features will be marked as implemented in this README as the rebuild progresses.
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Contributions, suggestions, and issue reports are welcome.
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+1. Fork the repository.
+2. Create a feature branch.
+3. Make your changes.
+4. Add or update tests where appropriate.
+5. Run the test suite and code formatter.
+6. Open a pull request.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Miamala is open-source software licensed under the **MIT License**.
+
+## Project
+
+**Miamala** — a practical payment transaction management system being rebuilt with Laravel.
+
+Repository: https://github.com/aziziyusuph/miamala
