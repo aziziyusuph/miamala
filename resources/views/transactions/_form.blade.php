@@ -79,6 +79,27 @@
         @endif
     </div>
 
+    @if ($transaction->exists)
+        <div style="margin: 1.5rem 0; padding: 1rem; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb;">
+            <h3 style="margin: 0 0 0.75rem; font-size: 1rem;">Reconciliation summary</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem;">
+                <div><strong>Received amount:</strong><br>{{ number_format((float) $transaction->amount, 2) }}</div>
+                <div><strong>Expected amount:</strong><br>{{ $transaction->expected_amount !== null ? number_format((float) $transaction->expected_amount, 2) : '—' }}</div>
+                <div><strong>Difference:</strong><br>
+                    @if ($transaction->difference === null)
+                        —
+                    @else
+                        <span style="color: {{ $transaction->difference > 0 ? '#166534' : ($transaction->difference < 0 ? '#991b1b' : '#374151') }}; font-weight: 700;">
+                            {{ ($transaction->difference > 0 ? '+' : '') . number_format((float) $transaction->difference, 2) }}
+                        </span>
+                    @endif
+                </div>
+                <div><strong>Reconciliation status:</strong><br>{{ str_replace('_', ' ', ucfirst($transaction->reconciliation_status ?? 'unreconciled')) }}</div>
+                <div><strong>Reviewed:</strong><br>{{ $transaction->reconciled ? 'Yes' : 'No' }}</div>
+            </div>
+        </div>
+    @endif
+
     <div style="margin-bottom: 1rem;">
         <label for="notes">Notes</label>
         <textarea id="notes" name="notes" rows="4">{{ old('notes', $transaction->notes) }}</textarea>

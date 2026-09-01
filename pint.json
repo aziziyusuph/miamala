@@ -1,0 +1,6 @@
+{
+    "preset": "laravel",
+    "notPath": [
+        "legacy/index.php"
+    ]
+}

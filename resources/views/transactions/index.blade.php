@@ -23,6 +23,11 @@
             .status-completed { background: #dcfce7; color: #166534; }
             .status-failed { background: #fee2e2; color: #991b1b; }
             .status-refunded { background: #ede9fe; color: #5b21b6; }
+            .reconciliation-pill { display: inline-block; padding: 0.2rem 0.55rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+            .reconciliation-unreconciled { background: #fff7ed; color: #9a5b00; }
+            .reconciliation-exact_match { background: #dcfce7; color: #166534; }
+            .reconciliation-underpaid { background: #fef3c7; color: #92400e; }
+            .reconciliation-overpaid { background: #fee2e2; color: #991b1b; }
             .empty { padding: 1rem; color: #4b5563; }
             .alert { padding: 0.8rem 1rem; margin-bottom: 1rem; border-radius: 6px; background: #dcfce7; color: #166534; }
             .pagination { display: flex; justify-content: center; margin-top: 1rem; }
@@ -108,12 +113,14 @@
                             <th>Provider</th>
                             <th>Transaction ID</th>
                             <th>Category</th>
-                            <th>Amount</th>
+                            <th>Received</th>
+                            <th>Expected</th>
+                            <th>Difference</th>
                             <th>Status</th>
                             <th>Payment date</th>
                             <th>Order reference</th>
-                            <th>Expected amount</th>
                             <th>Reconciliation</th>
+                            <th>Reviewed</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -126,13 +133,27 @@
                                 <td>{{ $transaction->transaction_id ?? '—' }}</td>
                                 <td>{{ $transaction->category }}</td>
                                 <td>{{ number_format((float) $transaction->amount, 2) }}</td>
+                                <td>{{ $transaction->expected_amount !== null ? number_format((float) $transaction->expected_amount, 2) : '—' }}</td>
+                                <td>
+                                    @if ($transaction->difference === null)
+                                        —
+                                    @else
+                                        <span style="color: {{ $transaction->difference > 0 ? '#166534' : ($transaction->difference < 0 ? '#991b1b' : '#374151') }}; font-weight: 700;">
+                                            {{ ($transaction->difference > 0 ? '+' : '') . number_format((float) $transaction->difference, 2) }}
+                                        </span>
+                                    @endif
+                                </td>
                                 <td>
                                     <span class="status-pill status-{{ $transaction->status }}">{{ ucfirst($transaction->status) }}</span>
                                 </td>
                                 <td>{{ $transaction->payment_date?->format('Y-m-d') ?? '—' }}</td>
                                 <td>{{ $transaction->order_reference ?? '—' }}</td>
-                                <td>{{ $transaction->expected_amount !== null ? number_format((float) $transaction->expected_amount, 2) : '—' }}</td>
-                                <td>{{ $transaction->reconciled ? 'Reconciled' : 'Unreconciled' }}</td>
+                                <td>
+                                    <span class="reconciliation-pill reconciliation-{{ $transaction->reconciliation_status }}">
+                                        {{ str_replace('_', ' ', ucfirst($transaction->reconciliation_status ?? 'unreconciled')) }}
+                                    </span>
+                                </td>
+                                <td>{{ $transaction->reconciled ? 'Yes' : 'No' }}</td>
                                 <td>
                                     <div class="actions">
                                         <a href="{{ route('transactions.edit', $transaction) }}" class="button">Edit</a>

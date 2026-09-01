@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\TransactionReconciliationService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -27,6 +28,7 @@ class Transaction extends Model
         'order_reference',
         'expected_amount',
         'reconciled',
+        'reconciliation_status',
         'notes',
     ];
 
@@ -37,10 +39,13 @@ class Transaction extends Model
         'reconciled' => 'boolean',
     ];
 
+    protected $appends = ['difference'];
+
     protected static function booted(): void
     {
         static::saving(function (self $transaction) {
             $transaction->validateBusinessRules();
+            $transaction->reconciliation_status = app(TransactionReconciliationService::class)->calculate($transaction);
         });
     }
 
@@ -96,6 +101,15 @@ class Transaction extends Model
                 throw new InvalidArgumentException('A transaction with this transaction ID already exists.');
             }
         }
+    }
+
+    public function getDifferenceAttribute(): ?float
+    {
+        if ($this->expected_amount === null || $this->expected_amount === '') {
+            return null;
+        }
+
+        return round((float) $this->amount - (float) $this->expected_amount, 2);
     }
 
     public function scopeCompleted($query)
