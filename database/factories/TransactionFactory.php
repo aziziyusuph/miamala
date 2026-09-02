@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Business;
 use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -21,6 +22,7 @@ class TransactionFactory extends Factory
 
         return [
             'customer_name' => $this->faker->name(),
+            'business_id' => Business::factory(),
             'phone' => $this->faker->numerify('2557########'),
             'provider' => $provider,
             'transaction_id' => $this->faker->unique()->bothify('TX-###-????'),

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Services\TransactionReconciliationService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use InvalidArgumentException;
 
@@ -16,6 +17,7 @@ class Transaction extends Model
 
     protected $fillable = [
         'customer_name',
+        'business_id',
         'phone',
         'provider',
         'transaction_id',
@@ -45,6 +47,11 @@ class Transaction extends Model
             $transaction->validateBusinessRules();
             $transaction->reconciliation_status = app(TransactionReconciliationService::class)->calculate($transaction);
         });
+    }
+
+    public function business(): BelongsTo
+    {
+        return $this->belongsTo(Business::class);
     }
 
     protected function validateBusinessRules(): void

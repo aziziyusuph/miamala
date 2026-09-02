@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Business;
 use App\Models\Transaction;
 use Illuminate\Database\Seeder;
 
@@ -10,7 +11,7 @@ class TransactionSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run(Business $business): void
     {
         $sampleTransactions = [
             [
@@ -102,11 +103,12 @@ class TransactionSeeder extends Seeder
         foreach ($sampleTransactions as $transaction) {
             Transaction::query()->firstOrCreate(
                 ['transaction_id' => $transaction['transaction_id']],
-                $transaction
+                array_merge($transaction, ['business_id' => $business->id])
             );
         }
 
         Transaction::factory()->count(25)->create([
+            'business_id' => $business->id,
             'provider' => fn () => fake()->randomElement(config('transactions.providers')),
             'status' => fn () => fake()->randomElement(config('transactions.statuses')),
             'category' => fn () => fake()->randomElement(config('transactions.categories')),
