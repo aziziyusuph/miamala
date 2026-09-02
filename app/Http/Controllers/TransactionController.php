@@ -4,16 +4,21 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\UpdateTransactionRequest;
+use App\Models\Business;
 use App\Models\Transaction;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class TransactionController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Transaction::query();
+        $business = $this->currentBusiness();
+        Gate::authorize('viewAny', Transaction::class);
+
+        $query = $business->transactions();
 
         if ($request->filled('search')) {
             $search = trim($request->search);
@@ -53,31 +58,45 @@ class TransactionController extends Controller
 
     public function create(): View
     {
+        $this->currentBusiness();
+        Gate::authorize('create', Transaction::class);
+
         return view('transactions.create');
     }
 
-    public function show(Transaction $transaction): View
+    public function show(int $transaction): View
     {
+        $transaction = $this->transactionForCurrentBusiness($transaction);
+        Gate::authorize('view', $transaction);
+
         return view('transactions.show', compact('transaction'));
     }
 
     public function store(StoreTransactionRequest $request): RedirectResponse
     {
+        $business = $this->currentBusiness();
+        Gate::authorize('create', Transaction::class);
         $data = $request->validated();
         $data['reconciled'] = $request->boolean('reconciled', false);
+        $data['business_id'] = $business->id;
 
         Transaction::create($data);
 
         return redirect()->route('transactions.index')->with('success', 'Transaction created successfully.');
     }
 
-    public function edit(Transaction $transaction): View
+    public function edit(int $transaction): View
     {
+        $transaction = $this->transactionForCurrentBusiness($transaction);
+        Gate::authorize('view', $transaction);
+
         return view('transactions.edit', compact('transaction'));
     }
 
-    public function update(UpdateTransactionRequest $request, Transaction $transaction): RedirectResponse
+    public function update(UpdateTransactionRequest $request, int $transaction): RedirectResponse
     {
+        $transaction = $this->transactionForCurrentBusiness($transaction);
+        Gate::authorize('update', $transaction);
         $data = $request->validated();
         $data['reconciled'] = $request->boolean('reconciled', false);
 
@@ -87,10 +106,26 @@ class TransactionController extends Controller
         return redirect()->route('transactions.index')->with('success', 'Transaction updated successfully.');
     }
 
-    public function destroy(Transaction $transaction): RedirectResponse
+    public function destroy(int $transaction): RedirectResponse
     {
+        $transaction = $this->transactionForCurrentBusiness($transaction);
+        Gate::authorize('delete', $transaction);
         $transaction->delete();
 
         return redirect()->route('transactions.index')->with('success', 'Transaction deleted successfully.');
+    }
+
+    private function currentBusiness(): Business
+    {
+        $business = auth()->user()?->business;
+
+        abort_unless($business instanceof Business, 404);
+
+        return $business;
+    }
+
+    private function transactionForCurrentBusiness(int $transaction): Transaction
+    {
+        return $this->currentBusiness()->transactions()->findOrFail($transaction);
     }
 }

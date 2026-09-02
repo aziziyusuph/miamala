@@ -2,13 +2,32 @@
 
 namespace Tests\Feature;
 
+use App\Models\Business;
 use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class TransactionCrudTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected Business $business;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $user = User::factory()->create();
+        $this->business = $user->business;
+        $this->actingAs($user);
+    }
+
+    protected function transactionFactory(): Factory
+    {
+        return Transaction::factory()->for($this->business);
+    }
 
     protected function transactionData(array $overrides = []): array
     {
@@ -30,7 +49,7 @@ class TransactionCrudTest extends TestCase
 
     public function test_transaction_index_page_loads(): void
     {
-        Transaction::factory()->count(3)->create();
+        $this->transactionFactory()->count(3)->create();
 
         $response = $this->get('/transactions');
 
@@ -40,7 +59,7 @@ class TransactionCrudTest extends TestCase
 
     public function test_transactions_paginate(): void
     {
-        Transaction::factory()->count(20)->create();
+        $this->transactionFactory()->count(20)->create();
 
         $response = $this->get('/transactions?page=1');
 
@@ -51,8 +70,8 @@ class TransactionCrudTest extends TestCase
 
     public function test_search_by_customer_name_works(): void
     {
-        Transaction::factory()->create(['customer_name' => 'Alice Johnson']);
-        Transaction::factory()->create(['customer_name' => 'Bob Smith']);
+        $this->transactionFactory()->create(['customer_name' => 'Alice Johnson']);
+        $this->transactionFactory()->create(['customer_name' => 'Bob Smith']);
 
         $response = $this->get('/transactions?search=Alice');
 
@@ -63,8 +82,8 @@ class TransactionCrudTest extends TestCase
 
     public function test_search_by_phone_works(): void
     {
-        Transaction::factory()->create(['phone' => '255700000001']);
-        Transaction::factory()->create(['phone' => '255700000002']);
+        $this->transactionFactory()->create(['phone' => '255700000001']);
+        $this->transactionFactory()->create(['phone' => '255700000002']);
 
         $response = $this->get('/transactions?search=255700000001');
 
@@ -75,8 +94,8 @@ class TransactionCrudTest extends TestCase
 
     public function test_search_by_transaction_id_works(): void
     {
-        Transaction::factory()->create(['transaction_id' => 'TX-SEARCH-001']);
-        Transaction::factory()->create(['transaction_id' => 'TX-SEARCH-002']);
+        $this->transactionFactory()->create(['transaction_id' => 'TX-SEARCH-001']);
+        $this->transactionFactory()->create(['transaction_id' => 'TX-SEARCH-002']);
 
         $response = $this->get('/transactions?search=TX-SEARCH-001');
 
@@ -87,8 +106,8 @@ class TransactionCrudTest extends TestCase
 
     public function test_search_by_order_reference_works(): void
     {
-        Transaction::factory()->create(['order_reference' => 'ORD-REF-100']);
-        Transaction::factory()->create(['order_reference' => 'ORD-REF-200']);
+        $this->transactionFactory()->create(['order_reference' => 'ORD-REF-100']);
+        $this->transactionFactory()->create(['order_reference' => 'ORD-REF-200']);
 
         $response = $this->get('/transactions?search=ORD-REF-100');
 
@@ -99,11 +118,11 @@ class TransactionCrudTest extends TestCase
 
     public function test_provider_filter_works(): void
     {
-        Transaction::factory()->create([
+        $this->transactionFactory()->create([
             'customer_name' => 'Provider Match Customer',
             'provider' => 'M-Pesa',
         ]);
-        Transaction::factory()->create([
+        $this->transactionFactory()->create([
             'customer_name' => 'Provider Excluded Customer',
             'provider' => 'Bank',
         ]);
@@ -117,11 +136,11 @@ class TransactionCrudTest extends TestCase
 
     public function test_status_filter_works(): void
     {
-        Transaction::factory()->create([
+        $this->transactionFactory()->create([
             'customer_name' => 'Pending Row Customer',
             'status' => 'pending',
         ]);
-        Transaction::factory()->create([
+        $this->transactionFactory()->create([
             'customer_name' => 'Completed Row Customer',
             'status' => 'completed',
         ]);
@@ -135,11 +154,11 @@ class TransactionCrudTest extends TestCase
 
     public function test_category_filter_works(): void
     {
-        Transaction::factory()->create([
+        $this->transactionFactory()->create([
             'customer_name' => 'Category Match Customer',
             'category' => 'School Fees',
         ]);
-        Transaction::factory()->create([
+        $this->transactionFactory()->create([
             'customer_name' => 'Category Excluded Customer',
             'category' => 'Rent',
         ]);
@@ -153,8 +172,8 @@ class TransactionCrudTest extends TestCase
 
     public function test_payment_date_filter_works(): void
     {
-        Transaction::factory()->create(['payment_date' => '2026-08-01 10:00:00']);
-        Transaction::factory()->create(['payment_date' => '2026-08-20 10:00:00']);
+        $this->transactionFactory()->create(['payment_date' => '2026-08-01 10:00:00']);
+        $this->transactionFactory()->create(['payment_date' => '2026-08-20 10:00:00']);
 
         $response = $this->get('/transactions?from=2026-08-01&to=2026-08-10');
 
@@ -165,7 +184,7 @@ class TransactionCrudTest extends TestCase
 
     public function test_combined_search_and_filters_work_together(): void
     {
-        Transaction::factory()->create([
+        $this->transactionFactory()->create([
             'customer_name' => 'Zawadi Moyo',
             'provider' => 'M-Pesa',
             'status' => 'completed',
@@ -173,7 +192,7 @@ class TransactionCrudTest extends TestCase
             'payment_date' => '2026-08-15 09:00:00',
         ]);
 
-        Transaction::factory()->create([
+        $this->transactionFactory()->create([
             'customer_name' => 'John Doe',
             'provider' => 'Bank',
             'status' => 'pending',
@@ -227,7 +246,7 @@ class TransactionCrudTest extends TestCase
 
     public function test_duplicate_transaction_id_is_rejected(): void
     {
-        Transaction::factory()->create(['transaction_id' => 'TX-DUPLICATE']);
+        $this->transactionFactory()->create(['transaction_id' => 'TX-DUPLICATE']);
 
         $response = $this->from('/transactions/create')->post('/transactions', $this->transactionData([
             'transaction_id' => 'TX-DUPLICATE',
@@ -239,7 +258,7 @@ class TransactionCrudTest extends TestCase
 
     public function test_edit_form_loads(): void
     {
-        $transaction = Transaction::factory()->create();
+        $transaction = $this->transactionFactory()->create();
 
         $response = $this->get('/transactions/'.$transaction->id.'/edit');
 
@@ -249,7 +268,7 @@ class TransactionCrudTest extends TestCase
 
     public function test_transaction_detail_page_loads(): void
     {
-        $transaction = Transaction::factory()->create([
+        $transaction = $this->transactionFactory()->create([
             'customer_name' => 'Detail Customer',
             'transaction_id' => 'TX-DETAIL-001',
         ]);
@@ -264,7 +283,7 @@ class TransactionCrudTest extends TestCase
 
     public function test_transaction_can_be_updated(): void
     {
-        $transaction = Transaction::factory()->create([
+        $transaction = $this->transactionFactory()->create([
             'customer_name' => 'Old Customer',
             'status' => 'pending',
         ]);
@@ -286,7 +305,7 @@ class TransactionCrudTest extends TestCase
 
     public function test_transaction_can_be_soft_deleted(): void
     {
-        $transaction = Transaction::factory()->create();
+        $transaction = $this->transactionFactory()->create();
 
         $response = $this->delete('/transactions/'.$transaction->id);
 
@@ -296,8 +315,8 @@ class TransactionCrudTest extends TestCase
 
     public function test_deleted_transaction_does_not_appear_in_listing(): void
     {
-        $visible = Transaction::factory()->create(['customer_name' => 'Visible Customer']);
-        $deleted = Transaction::factory()->create(['customer_name' => 'Deleted Customer']);
+        $visible = $this->transactionFactory()->create(['customer_name' => 'Visible Customer']);
+        $deleted = $this->transactionFactory()->create(['customer_name' => 'Deleted Customer']);
         $deleted->delete();
 
         $response = $this->get('/transactions');

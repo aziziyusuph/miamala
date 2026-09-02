@@ -20,7 +20,7 @@ class UpdateTransactionRequest extends FormRequest
             'customer_name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'string', 'max:30'],
             'provider' => ['required', 'string', 'max:50'],
-            'transaction_id' => ['nullable', 'string', 'max:100', Rule::unique('transactions', 'transaction_id')->ignore($transaction?->id)],
+            'transaction_id' => ['nullable', 'string', 'max:100', Rule::unique('transactions', 'transaction_id')->ignore($transaction)],
             'category' => ['required', 'string', 'max:80'],
             'amount' => ['required', 'numeric', 'gt:0'],
             'status' => ['required', 'string', Rule::in(config('transactions.statuses'))],
