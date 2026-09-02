@@ -21,7 +21,7 @@ class StoreTransactionRequest extends FormRequest
             'transaction_id' => ['nullable', 'string', 'max:100', Rule::unique('transactions', 'transaction_id')],
             'category' => ['required', 'string', 'max:80'],
             'amount' => ['required', 'numeric', 'gt:0'],
-            'status' => ['required', 'string', 'in:pending,completed,failed,refunded'],
+            'status' => ['required', 'string', Rule::in(config('transactions.statuses'))],
             'payment_date' => ['required', 'date'],
             'order_reference' => ['nullable', 'string', 'max:100'],
             'expected_amount' => ['nullable', 'numeric', 'gt:0'],

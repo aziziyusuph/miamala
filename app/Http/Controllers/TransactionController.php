@@ -56,6 +56,11 @@ class TransactionController extends Controller
         return view('transactions.create');
     }
 
+    public function show(Transaction $transaction): View
+    {
+        return view('transactions.show', compact('transaction'));
+    }
+
     public function store(StoreTransactionRequest $request): RedirectResponse
     {
         $data = $request->validated();

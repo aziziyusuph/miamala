@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Transaction;
+use App\Services\TransactionReconciliationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -98,5 +99,29 @@ class TransactionReconciliationTest extends TestCase
 
         $this->assertSame('exact_match', $transaction->reconciliation_status);
         $this->assertSame(0.01, round((float) $transaction->difference, 2));
+    }
+
+    public function test_cent_values_are_compared_without_float_arithmetic(): void
+    {
+        $transaction = Transaction::create($this->transactionData([
+            'amount' => '100.10',
+            'expected_amount' => '100.09',
+        ]));
+
+        $this->assertSame('exact_match', $transaction->reconciliation_status);
+        $this->assertSame(0.01, (float) $transaction->difference);
+    }
+
+    public function test_amount_validation_uses_decimal_minor_units(): void
+    {
+        $transaction = Transaction::create($this->transactionData([
+            'amount' => '100.10',
+            'expected_amount' => '100.09',
+        ]));
+
+        $service = app(TransactionReconciliationService::class);
+
+        $this->assertSame(10010, $service->toMinorUnits($transaction->amount));
+        $this->assertSame(10009, $service->toMinorUnits($transaction->expected_amount));
     }
 }

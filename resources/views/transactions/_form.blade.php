@@ -27,7 +27,12 @@
 
         <div>
             <label for="provider">Provider</label>
-            <input id="provider" name="provider" type="text" value="{{ old('provider', $transaction->provider) }}" maxlength="50" required>
+            <select id="provider" name="provider" required>
+                <option value="">Select provider</option>
+                @foreach (config('transactions.providers') as $provider)
+                    <option value="{{ $provider }}" @selected(old('provider', $transaction->provider) === $provider)>{{ $provider }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div>
@@ -37,7 +42,12 @@
 
         <div>
             <label for="category">Category</label>
-            <input id="category" name="category" type="text" value="{{ old('category', $transaction->category) }}" maxlength="80" required>
+            <select id="category" name="category" required>
+                <option value="">Select category</option>
+                @foreach (config('transactions.categories') as $category)
+                    <option value="{{ $category }}" @selected(old('category', $transaction->category) === $category)>{{ $category }}</option>
+                @endforeach
+            </select>
         </div>
 
         <div>
@@ -48,7 +58,7 @@
         <div>
             <label for="status">Status</label>
             <select id="status" name="status" required>
-                @foreach (['pending', 'completed', 'failed', 'refunded'] as $status)
+                @foreach (config('transactions.statuses') as $status)
                     <option value="{{ $status }}" @selected(old('status', $transaction->status) == $status)>{{ ucfirst($status) }}</option>
                 @endforeach
             </select>

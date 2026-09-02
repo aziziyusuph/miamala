@@ -12,10 +12,6 @@ class TransactionSeeder extends Seeder
      */
     public function run(): void
     {
-        $providers = ['M-Pesa', 'Airtel Money', 'Mixx by Yas', 'Bank', 'Cash', 'Other'];
-        $statuses = ['pending', 'completed', 'failed', 'refunded'];
-        $categories = ['Sale', 'School Fees', 'Rent', 'Donation', 'Invoice', 'Membership', 'Service', 'Other'];
-
         $sampleTransactions = [
             [
                 'customer_name' => 'Aisha Mchome',
@@ -111,9 +107,9 @@ class TransactionSeeder extends Seeder
         }
 
         Transaction::factory()->count(25)->create([
-            'provider' => fn () => fake()->randomElement($providers),
-            'status' => fn () => fake()->randomElement($statuses),
-            'category' => fn () => fake()->randomElement($categories),
+            'provider' => fn () => fake()->randomElement(config('transactions.providers')),
+            'status' => fn () => fake()->randomElement(config('transactions.statuses')),
+            'category' => fn () => fake()->randomElement(config('transactions.categories')),
             'reconciled' => fn () => fake()->boolean(60),
         ]);
     }

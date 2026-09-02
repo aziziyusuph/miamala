@@ -14,13 +14,9 @@ class TransactionFactory extends Factory
 
     public function definition(): array
     {
-        $providers = ['M-Pesa', 'Airtel Money', 'Mixx by Yas', 'Bank', 'Cash', 'Other'];
-        $statuses = ['pending', 'completed', 'failed', 'refunded'];
-        $categories = ['Sale', 'School Fees', 'Rent', 'Donation', 'Invoice', 'Membership', 'Service', 'Other'];
-
         $amount = $this->faker->randomFloat(2, 500, 5000000);
-        $status = $this->faker->randomElement($statuses);
-        $provider = $this->faker->randomElement($providers);
+        $status = $this->faker->randomElement(config('transactions.statuses'));
+        $provider = $this->faker->randomElement(config('transactions.providers'));
         $reconciled = in_array($status, ['completed', 'refunded'], true) && $this->faker->boolean(70);
 
         return [
@@ -28,7 +24,7 @@ class TransactionFactory extends Factory
             'phone' => $this->faker->numerify('2557########'),
             'provider' => $provider,
             'transaction_id' => $this->faker->unique()->bothify('TX-###-????'),
-            'category' => $this->faker->randomElement($categories),
+            'category' => $this->faker->randomElement(config('transactions.categories')),
             'amount' => $amount,
             'status' => $status,
             'payment_date' => $this->faker->dateTimeBetween('-30 days', 'now'),

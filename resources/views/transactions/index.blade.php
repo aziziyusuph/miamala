@@ -54,7 +54,7 @@
                     <label for="provider">Provider</label>
                     <select id="provider" name="provider">
                         <option value="">All providers</option>
-                        @foreach (['M-Pesa', 'Airtel Money', 'Mixx by Yas', 'Bank', 'Cash', 'Other'] as $provider)
+                        @foreach (config('transactions.providers') as $provider)
                             <option value="{{ $provider }}" @selected(request('provider') === $provider)>{{ $provider }}</option>
                         @endforeach
                     </select>
@@ -64,7 +64,7 @@
                     <label for="status">Status</label>
                     <select id="status" name="status">
                         <option value="">All statuses</option>
-                        @foreach (['pending', 'completed', 'failed', 'refunded'] as $status)
+                        @foreach (config('transactions.statuses') as $status)
                             <option value="{{ $status }}" @selected(request('status') === $status)>{{ ucfirst($status) }}</option>
                         @endforeach
                     </select>
@@ -74,7 +74,7 @@
                     <label for="category">Category</label>
                     <select id="category" name="category">
                         <option value="">All categories</option>
-                        @foreach (['Sale', 'School Fees', 'Rent', 'Donation', 'Invoice', 'Membership', 'Service', 'Other'] as $category)
+                        @foreach (config('transactions.categories') as $category)
                             <option value="{{ $category }}" @selected(request('category') === $category)>{{ $category }}</option>
                         @endforeach
                     </select>

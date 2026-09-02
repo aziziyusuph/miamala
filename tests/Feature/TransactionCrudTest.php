@@ -247,6 +247,21 @@ class TransactionCrudTest extends TestCase
         $response->assertViewIs('transactions.edit');
     }
 
+    public function test_transaction_detail_page_loads(): void
+    {
+        $transaction = Transaction::factory()->create([
+            'customer_name' => 'Detail Customer',
+            'transaction_id' => 'TX-DETAIL-001',
+        ]);
+
+        $response = $this->get('/transactions/'.$transaction->id);
+
+        $response->assertOk();
+        $response->assertViewIs('transactions.show');
+        $response->assertSee('Detail Customer');
+        $response->assertSee('TX-DETAIL-001');
+    }
+
     public function test_transaction_can_be_updated(): void
     {
         $transaction = Transaction::factory()->create([

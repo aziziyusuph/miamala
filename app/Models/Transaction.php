@@ -12,8 +12,6 @@ class Transaction extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public const STATUSES = ['pending', 'completed', 'failed', 'refunded'];
-
     protected $table = 'transactions';
 
     protected $fillable = [
@@ -78,15 +76,17 @@ class Transaction extends Model
             throw new InvalidArgumentException('Payment date is required.');
         }
 
-        if ((float) $this->amount <= 0) {
+        $reconciliationService = app(TransactionReconciliationService::class);
+
+        if ($reconciliationService->toMinorUnits($this->amount) <= 0) {
             throw new InvalidArgumentException('Amount must be greater than zero.');
         }
 
-        if (! in_array($this->status, self::STATUSES, true)) {
+        if (! in_array($this->status, config('transactions.statuses'), true)) {
             throw new InvalidArgumentException('Status must be a valid transaction status.');
         }
 
-        if ($this->expected_amount !== null && (float) $this->expected_amount <= 0) {
+        if ($this->expected_amount !== null && $reconciliationService->toMinorUnits($this->expected_amount) <= 0) {
             throw new InvalidArgumentException('Expected amount must be greater than zero when provided.');
         }
 
@@ -105,11 +105,7 @@ class Transaction extends Model
 
     public function getDifferenceAttribute(): ?float
     {
-        if ($this->expected_amount === null || $this->expected_amount === '') {
-            return null;
-        }
-
-        return round((float) $this->amount - (float) $this->expected_amount, 2);
+        return app(TransactionReconciliationService::class)->differenceFor($this);
     }
 
     public function scopeCompleted($query)

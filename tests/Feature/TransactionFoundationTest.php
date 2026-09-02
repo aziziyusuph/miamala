@@ -80,6 +80,17 @@ class TransactionFoundationTest extends TestCase
         ]);
     }
 
+    public function test_provider_and_category_accept_custom_values(): void
+    {
+        $transaction = Transaction::factory()->create([
+            'provider' => 'Custom Provider',
+            'category' => 'Custom Category',
+        ]);
+
+        $this->assertSame('Custom Provider', $transaction->provider);
+        $this->assertSame('Custom Category', $transaction->category);
+    }
+
     public function test_duplicate_transaction_id_is_rejected(): void
     {
         Transaction::create([
