@@ -6,6 +6,7 @@ use App\Http\Requests\StoreTransactionRequest;
 use App\Http\Requests\UpdateTransactionRequest;
 use App\Models\Business;
 use App\Models\Transaction;
+use App\Services\TransactionLifecycleService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -99,9 +100,11 @@ class TransactionController extends Controller
         Gate::authorize('update', $transaction);
         $data = $request->validated();
         $data['reconciled'] = $request->boolean('reconciled', false);
+        $targetStatus = $data['status'];
+        unset($data['status']);
 
         $transaction->fill($data);
-        $transaction->save();
+        app(TransactionLifecycleService::class)->transition($transaction, $targetStatus);
 
         return redirect()->route('transactions.index')->with('success', 'Transaction updated successfully.');
     }
