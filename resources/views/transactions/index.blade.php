@@ -95,6 +95,7 @@
                     <div class="actions">
                         <button type="submit" class="button primary">Apply</button>
                         <a href="{{ route('transactions.index') }}" class="button">Reset</a>
+                        <a href="{{ route('transactions.export', request()->except('page')) }}" class="button">Export CSV</a>
                         <a href="{{ route('transactions.create') }}" class="button primary">New transaction</a>
                     </div>
                 </div>

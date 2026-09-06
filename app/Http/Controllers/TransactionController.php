@@ -7,10 +7,13 @@ use App\Http\Requests\UpdateTransactionRequest;
 use App\Models\Business;
 use App\Models\Transaction;
 use App\Services\TransactionLifecycleService;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TransactionController extends Controller
 {
@@ -19,44 +22,67 @@ class TransactionController extends Controller
         $business = $this->currentBusiness();
         Gate::authorize('viewAny', Transaction::class);
 
-        $query = $business->transactions();
-
-        if ($request->filled('search')) {
-            $search = trim($request->search);
-
-            $query->where(function ($searchQuery) use ($search) {
-                $searchQuery->where('customer_name', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%")
-                    ->orWhere('transaction_id', 'like', "%{$search}%")
-                    ->orWhere('order_reference', 'like', "%{$search}%");
-            });
-        }
-
-        if ($request->filled('provider')) {
-            $query->where('provider', $request->provider);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('category')) {
-            $query->where('category', $request->category);
-        }
-
-        if ($request->filled('from')) {
-            $query->whereDate('payment_date', '>=', $request->from);
-        }
-
-        if ($request->filled('to')) {
-            $query->whereDate('payment_date', '<=', $request->to);
-        }
+        $query = $this->filteredTransactionQuery($request);
 
         $transactionCount = (clone $query)->count();
         $totalAmount = (clone $query)->sum('amount');
         $transactions = $query->orderByDesc('payment_date')->paginate(15)->appends($request->query());
 
         return view('transactions.index', compact('transactions', 'transactionCount', 'totalAmount'));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $this->currentBusiness();
+        Gate::authorize('viewAny', Transaction::class);
+
+        $filename = 'miamala-transactions-'.now()->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($request): void {
+            $output = fopen('php://output', 'wb');
+
+            fputcsv($output, [
+                'Transaction ID',
+                'Customer',
+                'Phone',
+                'Provider',
+                'Category',
+                'Amount',
+                'Status',
+                'Payment Date',
+                'Order Reference',
+                'Expected Amount',
+                'Reconciliation Status',
+                'Reconciled',
+                'Notes',
+            ]);
+
+            foreach ($this->filteredTransactionQuery($request)
+                ->orderByDesc('payment_date')
+                ->orderByDesc('id')
+                ->cursor() as $transaction) {
+                fputcsv($output, [
+                    $this->csvValue($transaction->transaction_id),
+                    $this->csvValue($transaction->customer_name),
+                    $this->csvValue($transaction->phone),
+                    $this->csvValue($transaction->provider),
+                    $this->csvValue($transaction->category),
+                    $this->csvValue($transaction->amount),
+                    $this->csvValue($transaction->status),
+                    $this->csvValue($transaction->payment_date?->format('Y-m-d H:i:s')),
+                    $this->csvValue($transaction->order_reference),
+                    $this->csvValue($transaction->expected_amount),
+                    $this->csvValue($transaction->reconciliation_status),
+                    $this->csvValue($transaction->reconciled ? 'Yes' : 'No'),
+                    $this->csvValue($transaction->notes),
+                ]);
+            }
+
+            fclose($output);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Cache-Control' => 'no-store',
+        ]);
     }
 
     public function create(): View
@@ -132,5 +158,54 @@ class TransactionController extends Controller
     private function transactionForCurrentBusiness(int $transaction): Transaction
     {
         return $this->currentBusiness()->transactions()->findOrFail($transaction);
+    }
+
+    private function filteredTransactionQuery(Request $request): Builder|HasMany
+    {
+        $query = $this->currentBusiness()->transactions();
+
+        if ($request->filled('search')) {
+            $search = trim($request->search);
+
+            $query->where(function ($searchQuery) use ($search) {
+                $searchQuery->where('customer_name', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('transaction_id', 'like', "%{$search}%")
+                    ->orWhere('order_reference', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('provider')) {
+            $query->where('provider', $request->provider);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('category')) {
+            $query->where('category', $request->category);
+        }
+
+        if ($request->filled('from')) {
+            $query->whereDate('payment_date', '>=', $request->from);
+        }
+
+        if ($request->filled('to')) {
+            $query->whereDate('payment_date', '<=', $request->to);
+        }
+
+        return $query;
+    }
+
+    private function csvValue(mixed $value): string
+    {
+        $value = (string) ($value ?? '');
+
+        if ($value !== '' && in_array($value[0], ['=', '+', '-', '@'], true)) {
+            return "'{$value}";
+        }
+
+        return $value;
     }
 }
