@@ -4,7 +4,7 @@
 
 This branch contains the **Laravel rebuild** of the original Miamala application. The rebuild is being developed as a clean, maintainable Laravel application while preserving the core transaction-management purpose of the original project.
 
-> **Development status:** Active rebuild. The transaction-management foundation and CRUD workflow are currently implemented; additional features are being developed incrementally.
+> **Development status:** M4 Phase 3A-3E is complete on the `laravel-rebuild` branch. The Laravel transaction module currently supports transaction CRUD, server-side lifecycle rules, search and filtering, filtered totals, pagination, CSV export, automatic reconciliation classification, a dedicated reconcile/unreconcile workflow, reconciliation-state filtering, reconciliation-state preservation during ordinary edits, business isolation, authorization, and soft deletion.
 
 ## What Miamala Does
 
@@ -23,9 +23,15 @@ Miamala is designed for businesses, schools, landlords, NGOs, online sellers, an
 * Store expected amounts for reconciliation
 * Mark transactions as reconciled or unreconciled
 * Search by customer name, phone number, transaction ID, or order reference
-* Filter by provider, status, category, and date range
+* Filter by provider, status, category, date range, and reconciliation state
+* Enforce supported transaction lifecycle transitions server-side
+* Classify reconciliation as unreconciled, exact match, underpaid, or overpaid
+* Calculate filtered transaction counts and total amounts
 * Paginate transaction records
+* Export all matching filtered transactions to CSV
 * Soft-delete transactions
+* Preserve reconciliation state during ordinary transaction edits
+* Isolate transactions by business and authorize transaction actions
 * Seed the application with realistic sample transaction data
 * Validate transaction business rules and prevent duplicate transaction IDs
 
@@ -44,6 +50,46 @@ Miamala is designed for businesses, schools, landlords, NGOs, online sellers, an
 * Completed
 * Failed
 * Refunded
+
+### Transaction lifecycle
+
+Supported lifecycle transitions are:
+
+* pending -> completed
+* pending -> failed
+* failed -> pending
+* completed -> refunded
+
+All other transitions are rejected server-side. Refund processing and payment-provider refund integrations are not currently implemented.
+
+### Reconciliation
+
+Miamala automatically calculates the `reconciliation_status` classification as:
+
+* `unreconciled`
+* `exact_match`
+* `underpaid`
+* `overpaid`
+
+The `difference` is calculated as received amount minus expected amount using currency minor units. The separate `reconciled` field is a manual workflow state and is not the same as `reconciliation_status`.
+
+Authenticated users can reconcile or unreconcile an owned transaction through:
+
+```text
+POST /transactions/{transaction}/reconcile
+```
+
+Transaction lists can be filtered with `reconciled=1` or `reconciled=0`. Ordinary transaction edits preserve the existing `reconciled` state.
+
+### CSV export
+
+Authenticated users can export the complete filtered transaction set through:
+
+```text
+GET /transactions/export
+```
+
+The export reuses the active search, provider, status, category, payment-date, and reconciliation-state filters. It is not limited by pagination, streams records, applies business isolation, excludes soft-deleted transactions, and protects spreadsheet formula-like values.
 
 ## Technology Stack
 
@@ -68,13 +114,20 @@ app/
 │       ├── StoreTransactionRequest.php
 │       └── UpdateTransactionRequest.php
 ├── Models/
+│   ├── Business.php
 │   └── Transaction.php
+├── Policies/
+│   └── TransactionPolicy.php
+└── Services/
+    ├── TransactionLifecycleService.php
+    └── TransactionReconciliationService.php
 
 database/
 ├── factories/
+│   ├── BusinessFactory.php
 │   └── TransactionFactory.php
 ├── migrations/
-│   └── *_create_transactions_table.php
+│   └── transaction and business ownership migrations
 └── seeders/
     └── TransactionSeeder.php
 
@@ -86,21 +139,39 @@ resources/
         ├── _form.blade.php
         ├── create.blade.php
         ├── edit.blade.php
-        └── index.blade.php
+        ├── index.blade.php
+        └── show.blade.php
 
 routes/
 └── web.php
 
 tests/
 └── Feature/
+    ├── TransactionBusinessScopeTest.php
     ├── TransactionCrudTest.php
-    └── TransactionFoundationTest.php
+    ├── TransactionExportTest.php
+    ├── TransactionFoundationTest.php
+    ├── TransactionLifecycleTest.php
+    ├── TransactionPolicyTest.php
+    ├── TransactionReconciliationTest.php
+    └── TransactionReconciliationWorkflowTest.php
 
 legacy/
 └── index.php
 ```
 
 The `legacy/` directory preserves the original PHP implementation while the main application is rebuilt in Laravel.
+
+## M4 Milestone Status
+
+* M4 Phase 1: Data foundation - completed
+* M4 Phase 2A: Business ownership foundation - completed
+* M4 Phase 2B: Authentication and authorization - completed
+* M4 Phase 3A: Transaction lifecycle rules - completed
+* M4 Phase 3B: Transaction filtering, totals, and pagination - completed
+* M4 Phase 3C: Filtered transaction CSV export - completed
+* M4 Phase 3D: Dedicated reconciliation workflow - completed
+* M4 Phase 3E: Reconciliation state preservation - completed
 
 ## Getting Started
 
@@ -218,10 +289,31 @@ npm run build
 | `payment_date`    | Date and time of payment                    |
 | `order_reference` | Related order, invoice, or reference number |
 | `expected_amount` | Amount expected for reconciliation          |
+| `reconciliation_status` | Automatically calculated reconciliation classification |
 | `reconciled`      | Whether the payment has been reconciled     |
 | `notes`           | Additional transaction information          |
 
+`reconciliation_status` is automatically calculated from the received amount, expected amount, and order reference. `reconciled` is a separate manual workflow state.
+
 Transaction records use soft deletes, and commonly queried fields such as phone number, provider, status, category, payment date, order reference, and reconciliation status are indexed.
+
+## Current Verification
+
+At checkpoint `5636d2e` on branch `laravel-rebuild`:
+
+```text
+php artisan test
+105 tests passed
+345 assertions
+```
+
+This is a checkpoint-specific verification result and may change as development continues.
+
+## M4 Phase 4 Baseline
+
+M4 Phase 3 is complete at checkpoint `5636d2e`. The current baseline is a business-scoped Laravel transaction module with CRUD, lifecycle enforcement, reconciliation workflow, search and filtering, totals, pagination, CSV export, authorization, and soft deletion.
+
+M4 Phase 4 scope has not been finalized. Dashboard and reporting needs, production deployment readiness, payment-provider integrations, and further operational UX improvements are possible candidates for future discovery only.
 
 ## Roadmap
 
@@ -230,16 +322,12 @@ The Laravel rebuild will continue in incremental milestones.
 Planned areas include:
 
 * Dashboard and payment summaries
-* Improved reconciliation workflows
-* CSV export
-* Authentication and user management
 * Reporting and analytics
 * Payment-provider integrations
 * Production deployment configuration
-* Additional automated tests
 * Documentation for administrators and users
 
-Features will be marked as implemented in this README as the rebuild progresses.
+M4 Phase 3A-3E is complete. Future milestone scope will be defined separately after discovery and review.
 
 ## Contributing
 
