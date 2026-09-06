@@ -52,9 +52,11 @@ class TransactionController extends Controller
             $query->whereDate('payment_date', '<=', $request->to);
         }
 
+        $transactionCount = (clone $query)->count();
+        $totalAmount = (clone $query)->sum('amount');
         $transactions = $query->orderByDesc('payment_date')->paginate(15)->appends($request->query());
 
-        return view('transactions.index', compact('transactions'));
+        return view('transactions.index', compact('transactions', 'transactionCount', 'totalAmount'));
     }
 
     public function create(): View

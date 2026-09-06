@@ -101,6 +101,11 @@
             </form>
         </div>
 
+        <div class="toolbar">
+            <strong>Filtered transactions:</strong> {{ $transactionCount }}
+            <strong>Total amount:</strong> {{ number_format((float) $totalAmount, 2) }}
+        </div>
+
         <div class="card">
             @if ($transactions->isEmpty())
                 <div class="empty">No transactions found.</div>

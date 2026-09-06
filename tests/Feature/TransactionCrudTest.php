@@ -207,6 +207,50 @@ class TransactionCrudTest extends TestCase
         $response->assertDontSee('John Doe');
     }
 
+    public function test_filtered_transaction_totals_are_displayed(): void
+    {
+        $this->transactionFactory()->create([
+            'customer_name' => 'Included Total Customer',
+            'provider' => 'M-Pesa',
+            'status' => 'completed',
+            'amount' => 125.50,
+        ]);
+        $this->transactionFactory()->create([
+            'customer_name' => 'Excluded Total Customer',
+            'provider' => 'Bank',
+            'status' => 'completed',
+            'amount' => 900.00,
+        ]);
+
+        $response = $this->get('/transactions?provider=M-Pesa&status=completed');
+
+        $response->assertOk();
+        $response->assertSee('Filtered transactions:</strong> 1', false);
+        $response->assertSee('Total amount:</strong> 125.50', false);
+    }
+
+    public function test_pagination_links_preserve_filters_and_search(): void
+    {
+        $this->transactionFactory()->count(16)->create([
+            'customer_name' => 'Included Pagination Customer',
+            'provider' => 'M-Pesa',
+            'status' => 'completed',
+        ]);
+        $this->transactionFactory()->create([
+            'customer_name' => 'Excluded Pagination Customer',
+            'provider' => 'Bank',
+            'status' => 'completed',
+        ]);
+
+        $response = $this->get('/transactions?search=Customer&provider=M-Pesa&status=completed');
+
+        $response->assertOk();
+        $response->assertSee('page=2');
+        $response->assertSee('provider=M-Pesa');
+        $response->assertSee('status=completed');
+        $response->assertSee('search=Customer');
+    }
+
     public function test_create_form_loads(): void
     {
         $response = $this->get('/transactions/create');
