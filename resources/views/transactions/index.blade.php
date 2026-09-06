@@ -91,6 +91,15 @@
                 </div>
 
                 <div class="field">
+                    <label for="reconciled">Reconciliation</label>
+                    <select id="reconciled" name="reconciled">
+                        <option value="">All reconciliation states</option>
+                        <option value="1" @selected(request('reconciled') === '1')>Reconciled</option>
+                        <option value="0" @selected(request('reconciled') === '0')>Unreconciled</option>
+                    </select>
+                </div>
+
+                <div class="field">
                     <label>&nbsp;</label>
                     <div class="actions">
                         <button type="submit" class="button primary">Apply</button>
@@ -163,6 +172,12 @@
                                 <td>
                                     <div class="actions">
                                         <a href="{{ route('transactions.edit', $transaction) }}" class="button">Edit</a>
+                                        <form method="POST" action="{{ route('transactions.reconcile', $transaction) }}">
+                                            @csrf
+                                            <button type="submit" class="button">
+                                                {{ $transaction->reconciled ? 'Mark as unreconciled' : 'Reconcile' }}
+                                            </button>
+                                        </form>
                                         <form method="POST" action="{{ route('transactions.destroy', $transaction) }}" onsubmit="return confirm('Are you sure you want to delete this transaction?');">
                                             @csrf
                                             @method('DELETE')

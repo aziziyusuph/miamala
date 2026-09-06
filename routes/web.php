@@ -20,5 +20,7 @@ Route::post('/logout', [AuthController::class, 'destroy'])
 Route::middleware('auth')->group(function () {
     Route::get('/transactions/export', [TransactionController::class, 'export'])
         ->name('transactions.export');
+    Route::post('/transactions/{transaction}/reconcile', [TransactionController::class, 'reconcile'])
+        ->name('transactions.reconcile');
     Route::resource('transactions', TransactionController::class);
 });

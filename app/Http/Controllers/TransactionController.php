@@ -85,6 +85,20 @@ class TransactionController extends Controller
         ]);
     }
 
+    public function reconcile(int $transaction): RedirectResponse
+    {
+        $transaction = $this->transactionForCurrentBusiness($transaction);
+        Gate::authorize('update', $transaction);
+
+        $transaction->reconciled = ! $transaction->reconciled;
+        $transaction->save();
+
+        return redirect()->route('transactions.index')->with(
+            'success',
+            $transaction->reconciled ? 'Transaction reconciled successfully.' : 'Transaction marked as unreconciled.',
+        );
+    }
+
     public function create(): View
     {
         $this->currentBusiness();
@@ -193,6 +207,10 @@ class TransactionController extends Controller
 
         if ($request->filled('to')) {
             $query->whereDate('payment_date', '<=', $request->to);
+        }
+
+        if ($request->has('reconciled') && in_array((string) $request->reconciled, ['0', '1'], true)) {
+            $query->where('reconciled', $request->boolean('reconciled'));
         }
 
         return $query;
