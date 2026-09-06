@@ -27,7 +27,6 @@ class UpdateTransactionRequest extends FormRequest
             'payment_date' => ['required', 'date'],
             'order_reference' => ['nullable', 'string', 'max:100'],
             'expected_amount' => ['nullable', 'numeric', 'gt:0'],
-            'reconciled' => ['nullable', 'boolean'],
             'reconciliation_status' => ['nullable', 'string', 'in:unreconciled,exact_match,underpaid,overpaid'],
             'notes' => ['nullable', 'string'],
         ];

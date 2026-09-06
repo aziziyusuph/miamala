@@ -79,14 +79,6 @@
             <input id="expected_amount" name="expected_amount" type="number" step="0.01" min="0.01" value="{{ old('expected_amount', $transaction->expected_amount) }}">
         </div>
 
-        @if ($transaction->exists)
-            <div style="display: flex; align-items: end;">
-                <label for="reconciled" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0;">
-                    <input id="reconciled" name="reconciled" type="checkbox" value="1" @checked(old('reconciled', $transaction->reconciled))>
-                    Reconciled
-                </label>
-            </div>
-        @endif
     </div>
 
     @if ($transaction->exists)

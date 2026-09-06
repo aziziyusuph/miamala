@@ -72,6 +72,38 @@ class TransactionReconciliationWorkflowTest extends TestCase
         $this->assertSame($expected['payment_date'], $after->payment_date->toDateTimeString());
     }
 
+    public function test_ordinary_update_preserves_reconciled_state(): void
+    {
+        $reconciled = $this->transactionFactory()->create(['reconciled' => true]);
+        $unreconciled = $this->transactionFactory()->create(['reconciled' => false]);
+
+        $this->put('/transactions/'.$reconciled->id, $this->transactionData($reconciled, [
+            'customer_name' => 'Updated Reconciled Customer',
+        ]))->assertRedirect('/transactions');
+        $this->put('/transactions/'.$unreconciled->id, $this->transactionData($unreconciled, [
+            'notes' => 'Updated without changing reconciliation.',
+        ]))->assertRedirect('/transactions');
+
+        $this->assertTrue((bool) $reconciled->fresh()->reconciled);
+        $this->assertFalse((bool) $unreconciled->fresh()->reconciled);
+    }
+
+    public function test_ordinary_update_payload_cannot_change_reconciled_state(): void
+    {
+        $reconciled = $this->transactionFactory()->create(['reconciled' => true]);
+        $unreconciled = $this->transactionFactory()->create(['reconciled' => false]);
+
+        $this->put('/transactions/'.$reconciled->id, $this->transactionData($reconciled, [
+            'reconciled' => false,
+        ]))->assertRedirect('/transactions');
+        $this->put('/transactions/'.$unreconciled->id, $this->transactionData($unreconciled, [
+            'reconciled' => true,
+        ]))->assertRedirect('/transactions');
+
+        $this->assertTrue((bool) $reconciled->fresh()->reconciled);
+        $this->assertFalse((bool) $unreconciled->fresh()->reconciled);
+    }
+
     public function test_unauthenticated_user_cannot_reconcile_transaction(): void
     {
         $transaction = $this->transactionFactory()->create(['reconciled' => false]);
@@ -172,5 +204,22 @@ class TransactionReconciliationWorkflowTest extends TestCase
     private function transactionFactory(): Factory
     {
         return Transaction::factory()->for($this->business);
+    }
+
+    private function transactionData(Transaction $transaction, array $overrides = []): array
+    {
+        return array_merge([
+            'customer_name' => $transaction->customer_name,
+            'phone' => $transaction->phone,
+            'provider' => $transaction->provider,
+            'transaction_id' => $transaction->transaction_id,
+            'category' => $transaction->category,
+            'amount' => $transaction->amount,
+            'status' => $transaction->status,
+            'payment_date' => $transaction->payment_date->toDateString(),
+            'order_reference' => $transaction->order_reference,
+            'expected_amount' => $transaction->expected_amount,
+            'notes' => $transaction->notes,
+        ], $overrides);
     }
 }

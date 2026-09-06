@@ -141,7 +141,6 @@ class TransactionController extends Controller
         $transaction = $this->transactionForCurrentBusiness($transaction);
         Gate::authorize('update', $transaction);
         $data = $request->validated();
-        $data['reconciled'] = $request->boolean('reconciled', false);
         $targetStatus = $data['status'];
         unset($data['status']);
 
