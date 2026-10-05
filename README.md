@@ -237,6 +237,22 @@ Or, on a fresh development database:
 php artisan migrate:fresh --seed
 ```
 
+### Initialize the public demo account
+
+The public demo uses a dedicated business, user, and 24 deterministic simulated transactions. Configure `MIAMALA_DEMO_EMAIL` and `MIAMALA_DEMO_PASSWORD` in the environment of the intended demo database before running:
+
+```bash
+php artisan miamala:seed-demo
+```
+
+The command prints the configured database name and asks for confirmation. In `APP_ENV=production`, explicitly add `--force` only after verifying that the application is connected to the intended demo database:
+
+```bash
+php artisan miamala:seed-demo --force
+```
+
+The command updates only its known demo records and refuses to reuse a demo business containing unrelated users or transactions. Do not use the normal development `db:seed` command to provision the public demo, and do not commit demo credentials. Demo accounts can view and export their simulated records but cannot create, edit, reconcile, or delete transactions.
+
 ### Run the application
 
 ```bash

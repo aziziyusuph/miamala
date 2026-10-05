@@ -33,6 +33,23 @@ class AuthenticationTest extends TestCase
             'password' => 'password',
         ]);
 
+        $response->assertRedirect(route('dashboard'));
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_successful_login_respects_an_intended_url(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'asha@example.com',
+            'password' => 'password',
+        ]);
+
+        $response = $this->withSession(['url.intended' => route('transactions.index')])
+            ->post('/login', [
+                'email' => 'asha@example.com',
+                'password' => 'password',
+            ]);
+
         $response->assertRedirect(route('transactions.index'));
         $this->assertAuthenticatedAs($user);
     }

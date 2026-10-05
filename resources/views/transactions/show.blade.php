@@ -38,7 +38,9 @@
                     <div><dt>Notes</dt><dd>{{ $transaction->notes ?? '—' }}</dd></div>
                 </dl>
                 <div class="actions">
-                    <a href="{{ route('transactions.edit', $transaction) }}" class="button primary">Edit transaction</a>
+                    @can('update', $transaction)
+                        <a href="{{ route('transactions.edit', $transaction) }}" class="button primary">Edit transaction</a>
+                    @endcan
                     <a href="{{ route('transactions.index') }}" class="button">Back to list</a>
                 </div>
             </div>

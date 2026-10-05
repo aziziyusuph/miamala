@@ -23,6 +23,10 @@
             <div class="card">
                 <h1>Log in</h1>
 
+                @if (app(\App\Services\DemoEnvironment::class)->isConfiguredDemoAccount())
+                    <p role="note">Demo access is available for evaluation. Use the demo account credentials provided by the site operator.</p>
+                @endif
+
                 @if ($errors->any())
                     <div class="error">
                         <ul>

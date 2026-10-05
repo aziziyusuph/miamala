@@ -1,12 +1,11 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\TransactionController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::view('/', 'pages.landing')->name('landing');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
@@ -18,6 +17,7 @@ Route::post('/logout', [AuthController::class, 'destroy'])
     ->name('logout');
 
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
     Route::get('/transactions/export', [TransactionController::class, 'export'])
         ->name('transactions.export');
     Route::post('/transactions/{transaction}/reconcile', [TransactionController::class, 'reconcile'])

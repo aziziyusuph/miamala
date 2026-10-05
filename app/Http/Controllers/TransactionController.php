@@ -131,7 +131,7 @@ class TransactionController extends Controller
     public function edit(int $transaction): View
     {
         $transaction = $this->transactionForCurrentBusiness($transaction);
-        Gate::authorize('view', $transaction);
+        Gate::authorize('update', $transaction);
 
         return view('transactions.edit', compact('transaction'));
     }
