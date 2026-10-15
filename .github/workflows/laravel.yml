@@ -1,0 +1,72 @@
+name: Miamala Focused Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "app/**"
+      - "config/**"
+      - "database/**"
+      - "tests/**"
+      - "phpunit.xml"
+      - "composer.json"
+      - "composer.lock"
+
+permissions:
+  contents: read
+
+jobs:
+  focused-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.4"
+          tools: composer
+          coverage: none
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Verify isolated test configuration
+        run: |
+          php -r '
+          $xml = simplexml_load_file("phpunit.xml");
+          if ($xml === false) {
+              fwrite(STDERR, "Unable to read phpunit.xml\n");
+              exit(1);
+          }
+          $expected = [
+              "APP_ENV" => "testing",
+              "DB_CONNECTION" => "sqlite",
+              "DB_DATABASE" => ":memory:",
+              "SESSION_DRIVER" => "array",
+          ];
+          foreach ($expected as $name => $value) {
+              $found = false;
+              foreach ($xml->php->env as $env) {
+                  if ((string) $env["name"] === $name &&
+                      (string) $env["value"] === $value) {
+                      $found = true;
+                      break;
+                  }
+              }
+              if (!$found) {
+                  fwrite(STDERR, "Missing expected phpunit.xml setting: $name=$value\n");
+                  exit(1);
+              }
+          }
+          echo "Required PHPUnit test environment settings verified.\n";
+          '
+
+      - name: Run Miamala config tests
+        run: vendor/bin/phpunit --filter MiamalaConfigTest
+
+      - name: Run transaction policy tests
+        run: vendor/bin/phpunit --filter TransactionPolicyTest
