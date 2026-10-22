@@ -1,0 +1,77 @@
+
+{
+  "$schema": "https://fundingjson.org/schema/v1.1.0.json",
+  "version": "v1.1.0",
+  "entity": {
+    "type": "individual",
+    "role": "maintainer",
+    "name": "Azizi Yusuph",
+    "email": "rechungura1@gmail.com",
+    "description": "Independent software developer and maintainer of Miamala, an open-source payment transaction management and reconciliation platform. I am developing Miamala to help businesses and organizations manage payment records more reliably, with a focus on the needs of African markets.",
+    "webpageUrl": {
+      "url": "https://github.com/aziziyusuph"
+    }
+  },
+  "projects": [
+    {
+      "guid": "miamala",
+      "name": "Miamala",
+      "description": "Miamala is an open-source fintech platform being rebuilt with Laravel, PHP, and PostgreSQL. It aims to help businesses, schools, landlords, NGOs, and SMEs organize, track, and reconcile payment transactions. The current focus is validating the Laravel rebuild and preparing a public demo. Planned development includes improved reconciliation and reporting, security hardening, automated testing, documentation, APIs, and integrations with mobile-money and banking providers. Funding will support sustainable development, maintenance, testing, and expanding the platform's usefulness for African businesses and organizations.",
+      "webpageUrl": {
+        "url": "https://github.com/aziziyusuph/miamala"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/aziziyusuph/miamala"
+      },
+      "licenses": [
+        "spdx:MIT"
+      ],
+      "tags": [
+        "fintech",
+        "payments",
+        "mobile-money",
+        "reconciliation",
+        "africa",
+        "laravel",
+        "php",
+        "open-source"
+      ]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "github-sponsors",
+        "type": "payment-provider",
+        "address": "https://github.com/sponsors/aziziyusuph",
+        "description": "Support ongoing Miamala development and maintenance through GitHub Sponsors."
+      }
+    ],
+    "plans": [
+      {
+        "guid": "miamala-monthly-support",
+        "status": "active",
+        "name": "Monthly Development Support",
+        "description": "Recurring support for developer time, testing, security improvements, documentation, infrastructure, bug fixes, and ongoing maintenance.",
+        "amount": 0,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": [
+          "github-sponsors"
+        ]
+      },
+      {
+        "guid": "miamala-one-time-support",
+        "status": "active",
+        "name": "One-Time Project Support",
+        "description": "Contribute any amount toward the Laravel rebuild, public-demo readiness, payment reconciliation, and future payment-provider integrations.",
+        "amount": 0,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": [
+          "github-sponsors"
+        ]
+      }
+    ]
+  }
+}
