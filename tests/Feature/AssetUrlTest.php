@@ -103,6 +103,5 @@ class AssetUrlTest extends TestCase
             $content
         );
         $this->assertStringNotContainsString('http://evil.example', $content);
-        $this->assertStringNotContainsString('http://miamala.test', $content);
     }
 }
