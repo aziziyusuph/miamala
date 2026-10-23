@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Vite;
+use RuntimeException;
 use Tests\TestCase;
 
 class AssetUrlTest extends TestCase
@@ -16,6 +17,10 @@ class AssetUrlTest extends TestCase
 
     protected string $tempHotFile;
 
+    protected bool $createdBuildDirectory = false;
+
+    protected bool $createdHotFile = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -27,16 +32,18 @@ class AssetUrlTest extends TestCase
         $this->tempHotFile = storage_path('framework/testing/asset-url-hot-'.bin2hex(random_bytes(4)));
 
         $manifestDirectory = public_path($this->tempBuildDirectory);
-        $filesystem = new Filesystem;
 
-        if ($filesystem->exists($manifestDirectory)) {
-            $filesystem->deleteDirectory($manifestDirectory);
+        if (is_dir($manifestDirectory)) {
+            throw new RuntimeException('Temporary Vite build directory already exists: '.$manifestDirectory);
         }
 
+        $filesystem = new Filesystem;
         $filesystem->ensureDirectoryExists($manifestDirectory);
+        $this->createdBuildDirectory = true;
 
+        $manifestPath = $manifestDirectory.'/manifest.json';
         $filesystem->put(
-            $manifestDirectory.'/manifest.json',
+            $manifestPath,
             json_encode([
                 'resources/css/app.css' => [
                     'file' => 'assets/app.css',
@@ -51,9 +58,17 @@ class AssetUrlTest extends TestCase
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
 
-        if (file_exists($this->tempHotFile)) {
-            unlink($this->tempHotFile);
+        $hotFileDirectory = dirname($this->tempHotFile);
+        if (! is_dir($hotFileDirectory)) {
+            $filesystem->ensureDirectoryExists($hotFileDirectory);
         }
+
+        if (file_exists($this->tempHotFile)) {
+            throw new RuntimeException('Temporary Vite hot file already exists: '.$this->tempHotFile);
+        }
+
+        $filesystem->put($this->tempHotFile, '');
+        $this->createdHotFile = true;
 
         Vite::useBuildDirectory($this->tempBuildDirectory);
         Vite::useHotFile($this->tempHotFile);
@@ -62,21 +77,23 @@ class AssetUrlTest extends TestCase
     protected function tearDown(): void
     {
         try {
-            Vite::useBuildDirectory($this->originalBuildDirectory);
-            Vite::useHotFile($this->originalHotFile);
+            try {
+                Vite::useBuildDirectory($this->originalBuildDirectory);
+                Vite::useHotFile($this->originalHotFile);
+            } finally {
+                $filesystem = new Filesystem;
+
+                if ($this->createdBuildDirectory && $filesystem->exists(public_path($this->tempBuildDirectory))) {
+                    $filesystem->deleteDirectory(public_path($this->tempBuildDirectory));
+                }
+
+                if ($this->createdHotFile && is_file($this->tempHotFile)) {
+                    unlink($this->tempHotFile);
+                }
+            }
         } finally {
-            $filesystem = new Filesystem;
-
-            if ($filesystem->exists(public_path($this->tempBuildDirectory))) {
-                $filesystem->deleteDirectory(public_path($this->tempBuildDirectory));
-            }
-
-            if (is_file($this->tempHotFile)) {
-                unlink($this->tempHotFile);
-            }
+            parent::tearDown();
         }
-
-        parent::tearDown();
     }
 
     public function test_homepage_uses_configured_asset_origin_for_vite_assets(): void
@@ -100,5 +117,6 @@ class AssetUrlTest extends TestCase
             $content
         );
         $this->assertStringNotContainsString('http://evil.example', $content);
+        $this->assertStringNotContainsString('http://miamala.test', $content);
     }
 }
