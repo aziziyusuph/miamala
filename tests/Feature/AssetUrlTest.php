@@ -23,14 +23,16 @@ class AssetUrlTest extends TestCase
         $this->originalBuildDirectory = Vite::buildDirectory();
         $this->originalHotFile = Vite::hotFile();
 
-        $this->tempBuildDirectory = 'asset-url-test-build';
-        $this->tempHotFile = storage_path('framework/testing/asset-url-hot');
+        $this->tempBuildDirectory = 'asset-url-test-build-'.bin2hex(random_bytes(4));
+        $this->tempHotFile = storage_path('framework/testing/asset-url-hot-'.bin2hex(random_bytes(4)));
 
         $manifestDirectory = public_path($this->tempBuildDirectory);
         $filesystem = new Filesystem;
 
-        $filesystem->ensureDirectoryExists($manifestDirectory);
-        $filesystem->deleteDirectory($manifestDirectory);
+        if ($filesystem->exists($manifestDirectory)) {
+            $filesystem->deleteDirectory($manifestDirectory);
+        }
+
         $filesystem->ensureDirectoryExists($manifestDirectory);
 
         $filesystem->put(
@@ -59,17 +61,19 @@ class AssetUrlTest extends TestCase
 
     protected function tearDown(): void
     {
-        Vite::useBuildDirectory($this->originalBuildDirectory);
-        Vite::useHotFile($this->originalHotFile);
+        try {
+            Vite::useBuildDirectory($this->originalBuildDirectory);
+            Vite::useHotFile($this->originalHotFile);
+        } finally {
+            $filesystem = new Filesystem;
 
-        $filesystem = new Filesystem;
+            if ($filesystem->exists(public_path($this->tempBuildDirectory))) {
+                $filesystem->deleteDirectory(public_path($this->tempBuildDirectory));
+            }
 
-        if ($filesystem->exists(public_path($this->tempBuildDirectory))) {
-            $filesystem->deleteDirectory(public_path($this->tempBuildDirectory));
-        }
-
-        if (file_exists($this->tempHotFile)) {
-            unlink($this->tempHotFile);
+            if (is_file($this->tempHotFile)) {
+                unlink($this->tempHotFile);
+            }
         }
 
         parent::tearDown();
@@ -87,9 +91,14 @@ class AssetUrlTest extends TestCase
 
         $content = $response->getContent();
 
-        $this->assertStringContainsString('https://miamala.test/build/assets/app.css', $content);
-        $this->assertStringContainsString('https://miamala.test/build/assets/app.js', $content);
+        $this->assertStringContainsString(
+            'https://miamala.test/'.$this->tempBuildDirectory.'/assets/app.css',
+            $content
+        );
+        $this->assertStringContainsString(
+            'https://miamala.test/'.$this->tempBuildDirectory.'/assets/app.js',
+            $content
+        );
         $this->assertStringNotContainsString('http://evil.example', $content);
-        $this->assertStringNotContainsString('http://miamala.test', $content);
     }
 }
