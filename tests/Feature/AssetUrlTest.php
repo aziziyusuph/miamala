@@ -19,8 +19,6 @@ class AssetUrlTest extends TestCase
 
     protected bool $createdBuildDirectory = false;
 
-    protected bool $createdHotFile = false;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -58,17 +56,9 @@ class AssetUrlTest extends TestCase
             ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
 
-        $hotFileDirectory = dirname($this->tempHotFile);
-        if (! is_dir($hotFileDirectory)) {
-            $filesystem->ensureDirectoryExists($hotFileDirectory);
-        }
-
         if (file_exists($this->tempHotFile)) {
             throw new RuntimeException('Temporary Vite hot file already exists: '.$this->tempHotFile);
         }
-
-        $filesystem->put($this->tempHotFile, '');
-        $this->createdHotFile = true;
 
         Vite::useBuildDirectory($this->tempBuildDirectory);
         Vite::useHotFile($this->tempHotFile);
@@ -85,10 +75,6 @@ class AssetUrlTest extends TestCase
 
                 if ($this->createdBuildDirectory && $filesystem->exists(public_path($this->tempBuildDirectory))) {
                     $filesystem->deleteDirectory(public_path($this->tempBuildDirectory));
-                }
-
-                if ($this->createdHotFile && is_file($this->tempHotFile)) {
-                    unlink($this->tempHotFile);
                 }
             }
         } finally {
