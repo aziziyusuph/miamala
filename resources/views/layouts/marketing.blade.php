@@ -9,18 +9,35 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="bg-white font-sans text-slate-900 antialiased">
-        <nav class="border-b border-slate-200 bg-slate-50" aria-label="Account navigation">
-            <div class="mx-auto flex max-w-7xl flex-col gap-3 px-5 py-3 sm:flex-row sm:items-center sm:justify-end sm:px-8">
-                @if (session('status'))
-                    <p role="status" class="text-sm font-medium leading-6 text-emerald-900 sm:mr-auto">
-                        {{ session('status') }}
-                    </p>
-                @endif
-                <a href="{{ route('register') }}" class="inline-flex min-h-10 items-center justify-center rounded-lg bg-emerald-800 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2">
+        @if (session('status'))
+            <div class="border-b border-emerald-200 bg-emerald-50 px-5 py-3 text-center text-sm font-medium leading-6 text-emerald-900 sm:px-8" role="status">
+                <div class="mx-auto max-w-7xl">{{ session('status') }}</div>
+            </div>
+        @endif
+
+        @yield('content')
+
+        @if (request()->routeIs('landing'))
+            <template id="homepage-register-link">
+                <a href="{{ route('register') }}" class="inline-flex min-h-10 items-center justify-center whitespace-nowrap rounded-lg bg-emerald-800 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2 sm:px-4">
                     Create account
                 </a>
-            </div>
-        </nav>
-        @yield('content')
+            </template>
+            <script>
+                (() => {
+                    const headerRow = document.querySelector('header > div > div');
+                    const brand = headerRow?.querySelector('[aria-label="Miamala home"]');
+                    const signIn = headerRow?.querySelector('a[href="{{ route('login') }}"]');
+                    const template = document.getElementById('homepage-register-link');
+
+                    if (!headerRow || !brand || !signIn || !template) return;
+
+                    const actions = document.createElement('div');
+                    actions.className = 'flex shrink-0 items-center gap-2 sm:gap-3';
+                    signIn.parentNode.insertBefore(actions, signIn);
+                    actions.append(signIn, template.content.firstElementChild.cloneNode(true));
+                })();
+            </script>
+        @endif
     </body>
 </html>
