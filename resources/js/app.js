@@ -1,4 +1,3 @@
-import './bootstrap';
 
 // Keep password visibility controls dependency-free and keyboard accessible.
 document.querySelectorAll('[data-password-toggle]').forEach((button) => {
