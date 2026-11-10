@@ -10,7 +10,10 @@
                     <span class="flex size-10 items-center justify-center rounded-xl bg-emerald-800 text-lg font-bold text-white" aria-hidden="true">M</span>
                     <span class="text-xl font-semibold tracking-tight text-slate-950">Miamala</span>
                 </a>
-                <a href="{{ route('login') }}" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2">Sign in</a>
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('login') }}" class="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2">Sign in</a>
+                    <a href="{{ route('register') }}" class="rounded-lg bg-emerald-800 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:ring-offset-2">Create account</a>
+                </div>
             </div>
             <nav class="flex flex-wrap gap-x-6 gap-y-2 border-t border-slate-100 py-3 text-sm font-medium text-slate-600" aria-label="Main navigation">
                 <a href="#how-it-works" class="rounded-sm py-1 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-emerald-600">How it works</a>

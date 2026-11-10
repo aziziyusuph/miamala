@@ -9,7 +9,9 @@ Route::view('/', 'pages.landing')->name('landing');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
-    Route::post('/login', [AuthController::class, 'store'])->name('login.store');
+    Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:login-session')->name('login.store');
+    Route::get('/register', [AuthController::class, 'createRegistration'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:registration')->name('register.store');
 });
 
 Route::post('/logout', [AuthController::class, 'destroy'])
