@@ -36,4 +36,4 @@ RUN npm run build \
 
 EXPOSE 80
 
-CMD ["sh", "-c", "php artisan config:cache && php artisan route:cache && php artisan view:cache && apache2-foreground"]
+CMD ["sh", "-c", "php scripts/startup-diagnostic.php; php artisan config:cache && php artisan route:cache && php artisan view:cache && apache2-foreground"]
