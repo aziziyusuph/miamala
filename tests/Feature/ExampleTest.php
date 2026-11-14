@@ -17,10 +17,15 @@ class ExampleTest extends TestCase
 
     public function test_homepage_has_a_create_account_link(): void
     {
-        $this->get('/')
+        $response = $this->get('/')
             ->assertOk()
             ->assertSee('Create account')
             ->assertSee('href="'.route('register').'"', false);
+
+        $this->assertSame(1, substr_count($response->getContent(), 'Create account'));
+        $response->assertSee('Payment records and reconciliation, in one clear workflow.')
+            ->assertSee('Explore Demo')
+            ->assertSee('View Source');
     }
 
     public function test_logout_confirmation_is_visible_after_redirecting_to_homepage(): void
