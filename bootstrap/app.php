@@ -13,7 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(
-            at: 'REMOTE_ADDR',
+            at: env('TRUSTED_PROXIES', env('APP_ENV', 'production') === 'production' ? '*' : 'REMOTE_ADDR'),
             headers: Request::HEADER_X_FORWARDED_PROTO,
         );
     })

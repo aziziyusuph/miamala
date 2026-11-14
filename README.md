@@ -88,11 +88,25 @@ php artisan key:generate
 
 Edit `.env` and configure the application environment and database connection. For a PostgreSQL database, configure the appropriate values for:
 
+For local development, use settings such as:
+
 ```dotenv
 APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://localhost:8000
+```
 
+For the Render deployment, configure `APP_ENV=production`, set `APP_URL` to the
+service's HTTPS URL, and set `SESSION_SECURE_COOKIE=true`. Leave
+`SESSION_DOMAIN` unset unless a custom cookie domain is required, and keep
+`SESSION_SAME_SITE=lax`. If `ASSET_URL` is configured, it must also use HTTPS.
+The application trusts the forwarded protocol header for HTTPS detection
+without trusting a forwarded host.
+
+Configure the PostgreSQL connection with the appropriate values for your
+environment:
+
+```dotenv
 DB_CONNECTION=pgsql
 DB_HOST=127.0.0.1
 DB_PORT=5432

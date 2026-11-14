@@ -3,12 +3,15 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use RuntimeException;
+use Symfony\Component\Process\Process;
 use Tests\TestCase;
 
 class AuthenticationTest extends TestCase
@@ -95,6 +98,7 @@ class AuthenticationTest extends TestCase
         $response->assertSee('name="name"', false);
         $response->assertSee('name="email"', false);
         $response->assertSee('name="password_confirmation"', false);
+        $response->assertSee('action="http://', false);
         $response->assertSee('_token', false);
     }
 
@@ -108,6 +112,91 @@ class AuthenticationTest extends TestCase
         $response->assertOk();
         $response->assertSee('action="https://', false);
         $response->assertDontSee('attacker.example', false);
+    }
+
+    public function test_production_proxy_configuration_trusts_only_forwarded_protocol(): void
+    {
+        $process = new Process([
+            PHP_BINARY,
+            '-r',
+            'require "vendor/autoload.php"; $app = require "bootstrap/app.php"; $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class); $request = Illuminate\Http\Request::create("http://miamala.test/register", "GET", [], [], [], ["REMOTE_ADDR" => "192.0.2.10", "HTTP_X_FORWARDED_PROTO" => "https", "HTTP_X_FORWARDED_HOST" => "attacker.example"]); $response = $kernel->handle($request); echo json_encode(["scheme" => $request->getScheme(), "host" => $request->getHost(), "body" => $response->getContent()], JSON_THROW_ON_ERROR);',
+        ], base_path(), [
+            'APP_ENV' => 'production',
+            'TRUSTED_PROXIES' => '*',
+            'CACHE_STORE' => 'database',
+            'DB_CONNECTION' => 'sqlite',
+            'DB_DATABASE' => ':memory:',
+            'DB_URL' => '',
+            'SESSION_DRIVER' => 'array',
+        ]);
+
+        $process->mustRun();
+
+        $result = json_decode($process->getOutput(), true, flags: JSON_THROW_ON_ERROR);
+
+        $this->assertSame('https', $result['scheme']);
+        $this->assertSame('miamala.test', $result['host']);
+        $this->assertStringContainsString('action="https://miamala.test/register"', $result['body']);
+        $this->assertStringNotContainsString('attacker.example', $result['body']);
+    }
+
+    public function test_production_authentication_urls_and_redirects_use_https(): void
+    {
+        config([
+            'app.env' => 'production',
+            'cache.default' => 'database',
+            'session.secure' => true,
+        ]);
+        $this->app->detectEnvironment(fn (): string => 'production');
+        (new AppServiceProvider($this->app))->boot();
+
+        $registrationResponse = $this->get('/register')
+            ->assertOk()
+            ->assertSee('action="https://', false);
+
+        $sessionCookie = collect($registrationResponse->headers->getCookies())
+            ->first(fn ($cookie) => $cookie->getName() === config('session.cookie'));
+        $this->assertNotNull($sessionCookie);
+        $this->assertTrue($sessionCookie->isSecure());
+
+        $this->get('/login')
+            ->assertOk()
+            ->assertSee('action="https://', false);
+
+        $user = User::factory()->create([
+            'email' => 'asha@example.com',
+            'password' => 'password',
+        ]);
+        $csrfToken = 'production-auth-test-token';
+
+        $response = $this->withSession(['_token' => $csrfToken])
+            ->post('/login', [
+                '_token' => $csrfToken,
+                'email' => $user->email,
+                'password' => 'password',
+            ]);
+
+        $response->assertRedirect();
+        $this->assertSame('https', parse_url($response->headers->get('Location'), PHP_URL_SCHEME));
+
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_session_cookie_security_default_matches_environment(): void
+    {
+        foreach (['production' => true, 'local' => false] as $environment => $expected) {
+            $process = new Process([
+                PHP_BINARY,
+                '-r',
+                'require "vendor/autoload.php"; putenv("SESSION_SECURE_COOKIE"); unset($_ENV["SESSION_SECURE_COOKIE"], $_SERVER["SESSION_SECURE_COOKIE"]); Illuminate\Support\Env::enablePutenv(); new Illuminate\Foundation\Application(getcwd()); $config = require "config/session.php"; echo json_encode($config["secure"]);',
+            ], base_path(), [
+                'APP_ENV' => $environment,
+            ]);
+
+            $process->mustRun();
+
+            $this->assertSame($expected, json_decode($process->getOutput(), true));
+        }
     }
 
     public function test_registration_is_rate_limited(): void
@@ -332,6 +421,43 @@ class AuthenticationTest extends TestCase
             ->assertSessionHasErrors(['email' => 'These credentials do not match our records.']);
 
         $this->assertGuest();
+    }
+
+    public function test_login_preserves_a_forwarded_https_intended_url(): void
+    {
+        TrustProxies::at('*');
+
+        try {
+            $forwardedHttps = [
+                'HTTP_X_FORWARDED_PROTO' => 'https',
+                'HTTP_X_FORWARDED_HOST' => 'attacker.example',
+            ];
+
+            $guestResponse = $this->withServerVariables($forwardedHttps)->get('/transactions');
+
+            $guestResponse->assertRedirect();
+            $this->assertSame('https', parse_url($guestResponse->headers->get('Location'), PHP_URL_SCHEME));
+            $this->assertSame('https', parse_url(session('url.intended'), PHP_URL_SCHEME));
+            $this->assertNotSame('attacker.example', parse_url(session('url.intended'), PHP_URL_HOST));
+
+            $user = User::factory()->create([
+                'email' => 'asha@example.com',
+                'password' => 'password',
+            ]);
+
+            $loginResponse = $this->withServerVariables($forwardedHttps)->post('/login', [
+                'email' => $user->email,
+                'password' => 'password',
+            ]);
+
+            $loginResponse->assertRedirect();
+            $this->assertSame('https', parse_url($loginResponse->headers->get('Location'), PHP_URL_SCHEME));
+            $this->assertSame('/transactions', parse_url($loginResponse->headers->get('Location'), PHP_URL_PATH));
+            $this->assertNotSame('attacker.example', parse_url($loginResponse->headers->get('Location'), PHP_URL_HOST));
+            $this->assertAuthenticatedAs($user);
+        } finally {
+            TrustProxies::flushState();
+        }
     }
 
     public function test_login_is_throttled_after_five_failed_attempts(): void

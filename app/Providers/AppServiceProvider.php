@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use LogicException;
@@ -26,8 +27,12 @@ class AppServiceProvider extends ServiceProvider
     {
         $sharedCacheStores = ['database', 'dynamodb', 'memcached', 'redis'];
 
-        if ($this->app->environment('production') && ! in_array(config('cache.default'), $sharedCacheStores, true)) {
-            throw new LogicException('Production authentication rate limiting requires a shared cache store.');
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+
+            if (! in_array(config('cache.default'), $sharedCacheStores, true)) {
+                throw new LogicException('Production authentication rate limiting requires a shared cache store.');
+            }
         }
 
         RateLimiter::for('login-session', function (Request $request): Limit {
