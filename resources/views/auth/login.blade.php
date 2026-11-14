@@ -1,62 +1,49 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Log in</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 2rem; background: #f7f7f7; color: #222; }
-            .container { max-width: 440px; margin: 4rem auto; }
-            .card { background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); padding: 1.5rem; }
-            h1 { margin-top: 0; }
-            .field { margin-bottom: 1rem; }
-            label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
-            input { width: 100%; padding: 0.65rem 0.75rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
-            button { padding: 0.65rem 0.9rem; background: #0f172a; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
-            .error { margin-bottom: 1rem; padding: 0.75rem 1rem; background: #fee2e2; color: #991b1b; border-radius: 6px; }
-            .remember { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
-            .remember input { width: auto; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="card">
-                <h1>Log in</h1>
+@extends('layouts.auth')
 
-                @if (app(\App\Services\DemoEnvironment::class)->isConfiguredDemoAccount())
-                    <p role="note">Demo access is available for evaluation. Use the demo account credentials provided by the site operator.</p>
-                @endif
+@section('title', 'Log in')
 
-                @if ($errors->any())
-                    <div class="error">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
+@section('heading', 'Welcome back')
+@section('intro', 'Sign in to manage your business payment records.')
 
-                <form method="POST" action="{{ route('login.store') }}">
-                    @csrf
-                    <div class="field">
-                        <label for="email">Email</label>
-                        <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required autofocus>
-                    </div>
+@section('content')
+    @if (app(\App\Services\DemoEnvironment::class)->isConfiguredDemoAccount())
+        <p role="note" class="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
+            Demo access is available for evaluation. Use the demo account credentials provided by the site operator.
+        </p>
+    @endif
 
-                    <div class="field">
-                        <label for="password">Password</label>
-                        <input id="password" name="password" type="password" autocomplete="current-password" required>
-                    </div>
+    <form method="POST" action="{{ route('login.store') }}" class="space-y-5">
+        @csrf
+        <div>
+            <label for="email" class="mb-2 block text-sm font-semibold text-slate-800">Email address</label>
+            <input id="email" name="email" type="email" value="{{ old('email') }}" autocomplete="email" required autofocus
+                class="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-base text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20"
+                placeholder="you@example.com">
+        </div>
 
-                    <label class="remember" for="remember">
-                        <input id="remember" name="remember" type="checkbox" value="1" @checked(old('remember'))>
-                        Remember me
-                    </label>
-
-                    <button type="submit">Log in</button>
-                </form>
+        <div>
+            <div class="mb-2 flex items-center justify-between gap-3">
+                <label for="password" class="block text-sm font-semibold text-slate-800">Password</label>
+                <a href="{{ route('password.request') }}" class="text-sm font-semibold text-emerald-800 underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-600">Forgot password?</a>
+            </div>
+            <div class="relative">
+                <input id="password" name="password" type="password" autocomplete="current-password" required data-password-input
+                    class="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3.5 pr-14 text-base text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20"
+                    placeholder="Enter your password">
+                <button type="button" data-password-toggle="password" aria-label="Show password" class="absolute inset-y-0 right-0 inline-flex w-12 items-center justify-center rounded-r-lg text-slate-500 hover:text-emerald-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-700">
+                    <svg data-eye-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="size-5" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg data-eye-off-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="hidden size-5" aria-hidden="true"><path d="m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.5 17.5 0 0 1-3.1 3.9M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1.4 0 2.7-.3 3.8-.8"/></svg>
+                </button>
             </div>
         </div>
-    </body>
-</html>
+
+        <label for="remember" class="flex w-fit cursor-pointer items-center gap-2.5 text-sm text-slate-700">
+            <input id="remember" name="remember" type="checkbox" value="1" @checked(old('remember')) class="size-4 rounded border-slate-300 text-emerald-700 focus:ring-emerald-700">
+            Remember me
+        </label>
+
+        <button type="submit" class="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2">Sign in</button>
+    </form>
+
+    <p class="mt-6 text-center text-sm text-slate-600">New to Miamala? <a href="{{ route('register') }}" class="font-semibold text-emerald-800 underline-offset-4 hover:underline">Create an account</a></p>
+@endsection
