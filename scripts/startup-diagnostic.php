@@ -1,5 +1,7 @@
 <?php
 
+use Illuminate\Support\Env;
+
 require __DIR__.'/../vendor/autoload.php';
 
 $prefix = 'MIAMALA_STARTUP_DIAGNOSTIC';
@@ -35,7 +37,7 @@ foreach ([
     '_ENV.APP_URL' => $_ENV['APP_URL'] ?? false,
     '_SERVER.APP_URL' => $_SERVER['APP_URL'] ?? false,
     'getenv.ASSET_URL' => getenv('ASSET_URL'),
-    'laravel_env.APP_URL' => \Illuminate\Support\Env::get('APP_URL'),
+    'laravel_env.APP_URL' => Env::get('APP_URL'),
 ] as $label => $value) {
     reportValue($prefix, $label, $value, $expected);
 }
