@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Middleware\EnsureBusinessSetupAccess;
 use App\Http\Requests\BusinessSetupRequest;
 use App\Models\Business;
 use App\Models\User;
@@ -19,13 +18,16 @@ class BusinessSetupController extends Controller
 
     public function store(BusinessSetupRequest $request): RedirectResponse
     {
-        $userId = $request->session()->get(EnsureBusinessSetupAccess::SESSION_KEY);
+        $user = $request->user();
+        abort_unless($user instanceof User, 403);
+
+        $userId = $user->getKey();
         $businessName = $request->validated('business_name');
 
         $business = DB::transaction(function () use ($userId, $businessName): ?Business {
             $user = User::query()->lockForUpdate()->find($userId);
 
-            if ($user === null || ! $user->hasVerifiedEmail()) {
+            if ($user === null) {
                 return null;
             }
 
@@ -41,15 +43,12 @@ class BusinessSetupController extends Controller
         });
 
         if ($business === null) {
-            $request->session()->forget(EnsureBusinessSetupAccess::SESSION_KEY);
-
-            return redirect()->route('onboarding.resume');
+            return redirect()->route('login');
         }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $user->refresh();
 
-        return redirect()->route('login')
-            ->with('status', 'Business setup is complete. Sign in with your registration email and password.');
+        return redirect()->route('dashboard')
+            ->with('status', 'Business setup is complete.');
     }
 }

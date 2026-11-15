@@ -2,7 +2,7 @@
 
 @section('title', 'Set up your business')
 @section('heading', 'Set up your business')
-@section('intro', 'Your email is verified. Add your business name to finish setting up your account.')
+@section('intro', 'Add your business name to finish setting up your account.')
 
 @section('content')
     @if (session('status'))

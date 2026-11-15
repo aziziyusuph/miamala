@@ -9,28 +9,16 @@ use Symfony\Component\HttpFoundation\Response;
 
 class EnsureBusinessSetupAccess
 {
-    public const SESSION_KEY = 'business_setup_user_id';
-
     public function handle(Request $request, Closure $next): Response
     {
-        $userId = $request->session()->get(self::SESSION_KEY);
+        $user = $request->user();
 
-        if (! is_numeric($userId)) {
-            return redirect()->route('onboarding.resume');
-        }
-
-        $user = User::query()->find($userId);
-
-        if ($user === null || ! $user->hasVerifiedEmail()) {
-            $request->session()->forget(self::SESSION_KEY);
-
-            return redirect()->route('verification.notice');
+        if (! $user instanceof User) {
+            return redirect()->route('login');
         }
 
         if ($user->business_id !== null) {
-            $request->session()->forget(self::SESSION_KEY);
-
-            return redirect()->route('login');
+            return redirect()->route('dashboard');
         }
 
         return $next($request);

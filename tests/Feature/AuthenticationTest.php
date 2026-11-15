@@ -34,7 +34,7 @@ class AuthenticationTest extends TestCase
         $response->assertSee('data-password-toggle', false);
     }
 
-    public function test_registration_creates_an_unverified_user_without_business_or_authenticating(): void
+    public function test_registration_creates_user_without_verification_or_authenticating(): void
     {
         Notification::fake();
 
@@ -47,14 +47,25 @@ class AuthenticationTest extends TestCase
 
         $user = User::query()->where('email', 'asha@example.com')->firstOrFail();
 
-        $response->assertRedirect(route('verification.notice'));
+        $response->assertRedirect(route('login'))
+            ->assertSessionHas('status', 'Your account has been created successfully. You can now log in.');
         $this->assertGuest();
         $this->assertNull($user->business_id);
-        $this->assertFalse($user->hasVerifiedEmail());
+        $this->assertNull($user->email_verified_at);
         $this->assertDatabaseCount('businesses', 0);
         $this->assertTrue(Hash::check('StrongPass123', $user->password));
         $this->assertNotSame('StrongPass123', $user->password);
-        Notification::assertSentTo($user, VerifyEmail::class);
+        Notification::assertNotSentTo($user, VerifyEmail::class);
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee('Your account has been created successfully. You can now log in.');
+
+        $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'StrongPass123',
+        ])->assertRedirect(route('business.setup'));
+
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_duplicate_email_registration_is_rejected(): void
@@ -240,7 +251,7 @@ class AuthenticationTest extends TestCase
                 'password_confirmation' => 'secure-password',
             ]);
 
-            $response->assertRedirect(route('verification.notice'));
+            $response->assertRedirect(route('login'));
             $this->assertDatabaseHas('users', ['email' => $email]);
             $this->assertGuest();
         }
@@ -266,7 +277,7 @@ class AuthenticationTest extends TestCase
 
         $user = User::where('email', 'asha@example.com')->firstOrFail();
 
-        $response->assertRedirect(route('verification.notice'));
+        $response->assertRedirect(route('login'));
         $this->assertGuest();
         $this->assertNull($user->business_id);
         $this->assertSame(1, Business::query()->count());
@@ -299,7 +310,7 @@ class AuthenticationTest extends TestCase
             'email' => '  ASHA@Example.com  ',
             'password' => 'secure-password',
             'password_confirmation' => 'secure-password',
-        ])->assertRedirect(route('verification.notice'));
+        ])->assertRedirect(route('login'));
 
         $response = $this->from('/register')->post('/register', [
             'name' => 'Another Asha',
@@ -405,19 +416,19 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticatedAs($user);
     }
 
-    public function test_unverified_users_cannot_log_in(): void
+    public function test_unverified_users_can_log_in(): void
     {
-        User::factory()->unverified()->create([
+        $user = User::factory()->unverified()->create([
             'email' => 'asha@example.com',
             'password' => 'password',
         ]);
 
-        $this->from('/login')->post('/login', [
+        $this->post('/login', [
             'email' => 'asha@example.com',
             'password' => 'password',
-        ])->assertRedirect('/login')->assertSessionHasErrors('email');
+        ])->assertRedirect(route('dashboard'));
 
-        $this->assertGuest();
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_successful_login_respects_an_intended_url_and_remember_me(): void

@@ -8,7 +8,6 @@ use App\Models\User;
 use Closure;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Auth\Events\PasswordReset;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,14 +37,12 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $user = User::query()->create($data);
+        User::query()->create($data);
 
-        event(new Registered($user));
         $request->session()->regenerate();
 
-        return redirect()->route('verification.notice')
-            ->with('status', 'A verification link has been sent to your email address.')
-            ->with('email', $user->email);
+        return redirect()->route('login')
+            ->with('status', 'Your account has been created successfully. You can now log in.');
     }
 
     public function store(LoginRequest $request): RedirectResponse
@@ -76,7 +73,6 @@ class AuthController extends Controller
         }
 
         $authenticated = $user !== null
-            && $user->hasVerifiedEmail()
             && Auth::attempt([
                 'email' => $user->email,
                 'password' => $credentials['password'],
@@ -92,6 +88,10 @@ class AuthController extends Controller
 
         RateLimiter::clear($rateLimitKey);
         $request->session()->regenerate();
+
+        if ($user->business_id === null) {
+            return redirect()->route('business.setup');
+        }
 
         return redirect()->intended(route('dashboard'));
     }

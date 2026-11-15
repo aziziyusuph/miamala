@@ -2,7 +2,7 @@
 
 @section('title', 'Create account')
 @section('heading', 'Create your account')
-@section('intro', 'Create your Miamala account. You can set up your business after verifying your email.')
+@section('intro', 'Create your Miamala account and set up your business after signing in.')
 
 @section('content')
     <form method="POST" action="{{ route('register.store') }}" class="space-y-5">
