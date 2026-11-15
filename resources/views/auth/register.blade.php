@@ -2,7 +2,7 @@
 
 @section('title', 'Create account')
 @section('heading', 'Create your account')
-@section('intro', 'Set up your Miamala account and business workspace.')
+@section('intro', 'Create your Miamala account. You can set up your business after verifying your email.')
 
 @section('content')
     <form method="POST" action="{{ route('register.store') }}" class="space-y-5">
@@ -12,12 +12,6 @@
             <input id="name" name="name" type="text" value="{{ old('name') }}" autocomplete="name" maxlength="255" required autofocus
                 class="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-base text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20"
                 placeholder="Your full name">
-        </div>
-        <div>
-            <label for="business_name" class="mb-2 block text-sm font-semibold text-slate-800">Business or workspace name <span class="font-normal text-slate-500">(optional)</span></label>
-            <input id="business_name" name="business_name" type="text" value="{{ old('business_name') }}" autocomplete="organization" maxlength="255"
-                class="min-h-12 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-base text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20"
-                placeholder="Your business name">
         </div>
         <div>
             <label for="email" class="mb-2 block text-sm font-semibold text-slate-800">Email address</label>

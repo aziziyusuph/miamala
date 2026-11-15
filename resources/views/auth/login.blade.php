@@ -6,6 +6,12 @@
 @section('intro', 'Sign in to manage your business payment records.')
 
 @section('content')
+    @if (session('status'))
+        <p role="status" class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-900">
+            {{ session('status') }}
+        </p>
+    @endif
+
     @if (app(\App\Services\DemoEnvironment::class)->isConfiguredDemoAccount())
         <p role="note" class="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-950">
             Demo access is available for evaluation. Use the demo account credentials provided by the site operator.
@@ -45,5 +51,6 @@
         <button type="submit" class="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-emerald-800 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-700 focus:ring-offset-2">Sign in</button>
     </form>
 
-    <p class="mt-6 text-center text-sm text-slate-600">New to Miamala? <a href="{{ route('register') }}" class="font-semibold text-emerald-800 underline-offset-4 hover:underline">Create an account</a></p>
+    <p class="mt-6 text-center text-sm text-slate-600">Need a verification or setup link? <a href="{{ route('verification.notice') }}" class="font-semibold text-emerald-800 underline-offset-4 hover:underline">Resend email</a></p>
+    <p class="mt-3 text-center text-sm text-slate-600">New to Miamala? <a href="{{ route('register') }}" class="font-semibold text-emerald-800 underline-offset-4 hover:underline">Create an account</a></p>
 @endsection

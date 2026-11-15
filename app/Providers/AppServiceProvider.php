@@ -49,5 +49,21 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perHour(10)->by('registration-session:'.hash('sha256', $sessionId)),
             ];
         });
+
+        RateLimiter::for('verification-resend', function (Request $request): array {
+            $emailInput = $request->input('email');
+            $email = is_string($emailInput) ? Str::lower(trim($emailInput)) : '';
+
+            return [
+                Limit::perHour(3)->by('verification-email:'.hash('sha256', $email)),
+                Limit::perHour(3)->by('verification-email:'.hash('sha256', $email.'|'.$request->ip())),
+                Limit::perHour(10)->by('verification-ip:'.$request->ip()),
+            ];
+        });
+
+        RateLimiter::for('business-setup', function (Request $request): Limit {
+            return Limit::perMinute(10)
+                ->by('business-setup:'.hash('sha256', $request->session()->getId()));
+        });
     }
 }

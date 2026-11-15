@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Models\Business;
 use App\Models\User;
 use App\Providers\AppServiceProvider;
 use Illuminate\Auth\Notifications\ResetPassword;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\DB;
@@ -32,8 +34,10 @@ class AuthenticationTest extends TestCase
         $response->assertSee('data-password-toggle', false);
     }
 
-    public function test_registration_creates_user_and_owned_business_and_authenticates(): void
+    public function test_registration_creates_an_unverified_user_without_business_or_authenticating(): void
     {
+        Notification::fake();
+
         $response = $this->post('/register', [
             'name' => 'Asha Mushi',
             'email' => 'ASHA@example.com',
@@ -43,13 +47,14 @@ class AuthenticationTest extends TestCase
 
         $user = User::query()->where('email', 'asha@example.com')->firstOrFail();
 
-        $response->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($user);
-        $this->assertNotNull($user->business_id);
-        $this->assertSame('Asha Mushi Workspace', $user->business->name);
-        $this->assertDatabaseHas('businesses', ['id' => $user->business_id]);
+        $response->assertRedirect(route('verification.notice'));
+        $this->assertGuest();
+        $this->assertNull($user->business_id);
+        $this->assertFalse($user->hasVerifiedEmail());
+        $this->assertDatabaseCount('businesses', 0);
         $this->assertTrue(Hash::check('StrongPass123', $user->password));
         $this->assertNotSame('StrongPass123', $user->password);
+        Notification::assertSentTo($user, VerifyEmail::class);
     }
 
     public function test_duplicate_email_registration_is_rejected(): void
@@ -98,6 +103,7 @@ class AuthenticationTest extends TestCase
         $response->assertSee('name="name"', false);
         $response->assertSee('name="email"', false);
         $response->assertSee('name="password_confirmation"', false);
+        $response->assertDontSee('name="business_name"', false);
         $response->assertSee('action="http://', false);
         $response->assertSee('_token', false);
     }
@@ -234,18 +240,20 @@ class AuthenticationTest extends TestCase
                 'password_confirmation' => 'secure-password',
             ]);
 
-            $response->assertRedirect(route('dashboard'));
+            $response->assertRedirect(route('verification.notice'));
             $this->assertDatabaseHas('users', ['email' => $email]);
-            $this->post('/logout')->assertRedirect(route('landing'));
+            $this->assertGuest();
         }
 
         $this->assertDatabaseCount('users', 2);
-        $this->assertDatabaseCount('businesses', 2);
+        $this->assertDatabaseCount('businesses', 0);
     }
 
-    public function test_successful_registration_creates_a_business_and_authenticates_the_user(): void
+    public function test_registration_ignores_business_assignment_and_name_until_setup(): void
     {
         $existingUser = User::factory()->create();
+
+        Notification::fake();
 
         $response = $this->post('/register', [
             'name' => 'Asha Mollel',
@@ -258,13 +266,11 @@ class AuthenticationTest extends TestCase
 
         $user = User::where('email', 'asha@example.com')->firstOrFail();
 
-        $response->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($user);
-        $this->assertNotNull($user->business_id);
-        $this->assertNotSame($existingUser->business_id, $user->business_id);
-        $this->assertSame('Asha Traders', $user->business->name);
-        $this->assertSame($user->id, $user->business->users()->sole()->id);
-        $this->assertDatabaseHas('businesses', ['id' => $user->business_id]);
+        $response->assertRedirect(route('verification.notice'));
+        $this->assertGuest();
+        $this->assertNull($user->business_id);
+        $this->assertSame(1, Business::query()->count());
+        $this->assertSame($existingUser->business_id, $existingUser->fresh()->business_id);
         $this->assertTrue(Hash::check('secure-password', $user->password));
         $this->assertNotSame('secure-password', $user->password);
     }
@@ -293,9 +299,7 @@ class AuthenticationTest extends TestCase
             'email' => '  ASHA@Example.com  ',
             'password' => 'secure-password',
             'password_confirmation' => 'secure-password',
-        ])->assertRedirect(route('dashboard'));
-
-        $this->post('/logout');
+        ])->assertRedirect(route('verification.notice'));
 
         $response = $this->from('/register')->post('/register', [
             'name' => 'Another Asha',
@@ -308,6 +312,7 @@ class AuthenticationTest extends TestCase
         $response->assertSessionHasErrors('email');
         $this->assertDatabaseCount('users', 1);
         $this->assertDatabaseHas('users', ['email' => 'asha@example.com']);
+        $this->assertDatabaseCount('businesses', 0);
     }
 
     public function test_registration_rejects_a_case_variant_of_a_legacy_email(): void
@@ -398,6 +403,21 @@ class AuthenticationTest extends TestCase
 
         $response->assertRedirect(route('dashboard'));
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_unverified_users_cannot_log_in(): void
+    {
+        User::factory()->unverified()->create([
+            'email' => 'asha@example.com',
+            'password' => 'password',
+        ]);
+
+        $this->from('/login')->post('/login', [
+            'email' => 'asha@example.com',
+            'password' => 'password',
+        ])->assertRedirect('/login')->assertSessionHasErrors('email');
+
+        $this->assertGuest();
     }
 
     public function test_successful_login_respects_an_intended_url_and_remember_me(): void

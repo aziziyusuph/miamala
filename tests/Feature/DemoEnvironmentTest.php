@@ -109,6 +109,7 @@ class DemoEnvironmentTest extends TestCase
 
         $this->assertSame('Demo User', $user->name);
         $this->assertSame($business->id, $user->business_id);
+        $this->assertTrue($user->hasVerifiedEmail());
         $this->assertSame(24, $business->transactions()->count());
         $this->assertSame(1, Business::query()->where('name', 'Miamala Demo Business')->count());
         $this->assertSame(1, User::query()->where('email', self::DEMO_EMAIL)->count());

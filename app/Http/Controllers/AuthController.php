@@ -4,16 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
-use App\Models\Business;
 use App\Models\User;
 use Closure;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Auth\Events\PasswordReset;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -39,23 +38,14 @@ class AuthController extends Controller
     public function register(RegisterRequest $request): RedirectResponse
     {
         $data = $request->validated();
+        $user = User::query()->create($data);
 
-        $user = DB::transaction(function () use ($data): User {
-            $business = Business::create([
-                'name' => ($data['business_name'] ?? null) ?: $data['name'].' Workspace',
-            ]);
-
-            return $business->users()->create([
-                'name' => $data['name'],
-                'email' => $data['email'],
-                'password' => $data['password'],
-            ]);
-        });
-
-        Auth::login($user);
+        event(new Registered($user));
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        return redirect()->route('verification.notice')
+            ->with('status', 'A verification link has been sent to your email address.')
+            ->with('email', $user->email);
     }
 
     public function store(LoginRequest $request): RedirectResponse
@@ -85,10 +75,12 @@ class AuthController extends Controller
                 ?? ($matchingUsers->count() === 1 ? $matchingUsers->first() : null);
         }
 
-        $authenticated = $user !== null && Auth::attempt([
-            'email' => $user->email,
-            'password' => $credentials['password'],
-        ], $request->boolean('remember'));
+        $authenticated = $user !== null
+            && $user->hasVerifiedEmail()
+            && Auth::attempt([
+                'email' => $user->email,
+                'password' => $credentials['password'],
+            ], $request->boolean('remember'));
 
         if (! $authenticated) {
             RateLimiter::hit($rateLimitKey, self::LOGIN_DECAY_SECONDS);

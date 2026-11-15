@@ -30,6 +30,15 @@ class DashboardTest extends TestCase
             ->assertSee('Payment activity and reconciliation overview for your business.');
     }
 
+    public function test_unverified_business_user_cannot_access_dashboard(): void
+    {
+        $user = User::factory()->unverified()->create();
+
+        $this->actingAs($user)
+            ->get('/dashboard')
+            ->assertRedirect(route('verification.notice'));
+    }
+
     public function test_dashboard_metrics_and_lists_only_include_the_users_business(): void
     {
         $user = User::factory()->create();

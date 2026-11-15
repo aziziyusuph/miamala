@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureBusinessSetupAccess;
+use App\Http\Middleware\EnsureUserHasBusiness;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,6 +14,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->alias([
+            'business.setup' => EnsureBusinessSetupAccess::class,
+            'has.business' => EnsureUserHasBusiness::class,
+        ]);
+
         $middleware->trustProxies(
             at: env('TRUSTED_PROXIES', env('APP_ENV', 'production') === 'production' ? '*' : 'REMOTE_ADDR'),
             headers: Request::HEADER_X_FORWARDED_PROTO,

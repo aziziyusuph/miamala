@@ -152,6 +152,7 @@ class SeedDemoCommand extends Command
             'email' => $email,
             'business_id' => $business->id,
         ]);
+        $user->email_verified_at = now();
         $user->password = Hash::make($password);
         $user->save();
 
